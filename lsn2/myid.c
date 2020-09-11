@@ -10,117 +10,149 @@
 
 #define MEM_CHECK(ptr)                                        \
   if ((ptr) == NULL)                                          \
-  {                                                           \
-    printf("Error with allocating memory for %s\n"            \
-           "In line %d, function %s, file %s\n",              \
-           #ptr, __LINE__, __PRETTY_FUNCTION__, __FILE__);    \
-    return;                                                   \
-  }
+    return MEM_ERR;                                           
 
 // useful typedefs
 typedef struct passwd Passwd;
 typedef struct group  Group;
 
+// Errors enum
+enum ERR
+{
+  MEM_ERR =  0,
+  USR_ERR = -1
+};
+
+// useful srtucture to cntain all user data
+typedef struct
+{
+  Passwd *user_pw;        // pointer to user passwd structure.
+  Group  *group_gr;       // pointer to group info structure. 
+  gid_t  *groups;         // pointer to array with supplementary groups' IDs.
+  size_t  groups_size;    // size of this array. 
+} User_info;
 
 /**
  * \brief Print user info function.
- * \param [in] user_pw     pointer to user passwd structure.
- * \param [in] group_pr    pointer to group info structure.
- * \param [in] groups      pointer to array with supplementary groups' IDs.
- * \param [in] groups_size size of this array.
- * \return None. 
+ * \param [in] user_pw     pointer to user passwd structure. 
+ * \return 1 if all is ok,
+ * \return code of error otherwise
  */
-void print_info( Passwd *user_pw, Group *group_gr, gid_t *groups, int groups_size )
+void print_info( const User_info *usr )
 {
-  printf("uid = %d(%s) ",          user_pw->pw_uid , user_pw->pw_name);
-  printf("gid = %d(%s) groups = ", group_gr->gr_gid, group_gr->gr_name);
+  printf("uid = %d(%s) ",           usr->user_pw->pw_uid, usr->user_pw->pw_name);
+  printf("gid = %d(%s) groups = ", usr->group_gr->gr_gid, usr->group_gr->gr_name);
   
-  for (int i = 0; i < groups_size; ++i)
+  for (int i = 0; i < usr->groups_size; ++i)
   {
-    Group *gr_i = getgrgid(groups[i]);
-    printf("%d(%s)%s", groups[i], gr_i->gr_name, (i == groups_size - 1) ? "\n" : ", ");
+    Group *gr_i = getgrgid(usr->groups[i]);
+    printf("%d(%s)%s", usr->groups[i], gr_i->gr_name,
+                       (i == usr->groups_size - 1) ? "\n" : ", ");
   }
 } /* End of 'print_info' fucntion */ 
 
 
 /**
  * \brief Get current user info.
- * \return None. 
+ * \param [in] user_pw     pointer to user passwd structure.
+ * \return 1 if all is ok,
+ * \return code of error otherwise
  */
-void cur_user_info( void )
+int cur_user_info( User_info *usr )
 {
   uid_t uid = getuid();
-  Passwd *user_pw = getpwuid(uid);
+  usr->user_pw = getpwuid(uid);
   
   gid_t gid = getgid();
-  Group *group_gr = getgrgid(gid);
+  usr->group_gr = getgrgid(gid);
   
   
-  int groups_size = getgroups(0, NULL);
-  gid_t *groups = calloc(groups_size, sizeof(gid_t));
+  usr->groups_size = getgroups(0, NULL);
+  usr->groups = calloc(usr->groups_size, sizeof(gid_t));
   
-  MEM_CHECK(groups);
+  MEM_CHECK(usr->groups);
   
-  getgroups(groups_size, groups);
-
-  print_info(user_pw, group_gr, groups, groups_size);
+  getgroups(usr->groups_size, usr->groups);
   
-  free(groups);
+  return 1;
 } /* End of 'cur_user_info' function */
 
 /**
  * \brief Get user info function.
  * \param [in] user_pw     pointer to user passwd structure.
- * \return None. 
+ * \return 1 if all is ok,
+ * \return code of error otherwise
  */
-void user_info( Passwd *user_pw )
+int user_info( User_info *usr )
 {
-  Group *group_gr = getgrgid(user_pw->pw_gid);
+#define GET_GR_LST \
+  getgrouplist(usr->user_pw->pw_name, usr->group_gr->gr_gid, usr->groups, (int *)&usr->groups_size)
 
-  int groups_size = 0;
+  usr->group_gr = getgrgid(usr->user_pw->pw_gid);
   
-  gid_t *groups = calloc(10, sizeof(gid_t));
+  usr->groups = calloc(10, sizeof(gid_t));
   
-  MEM_CHECK(groups);
-   
-  if (getgrouplist(user_pw->pw_name, group_gr->gr_gid, groups, &groups_size) == -1)
+  MEM_CHECK(usr->groups);
+                             
+  if (GET_GR_LST == -1)
   {
-    groups = realloc(groups, sizeof(gid_t) * groups_size);
-    MEM_CHECK(groups);
+    usr->groups = realloc(usr->groups, sizeof(gid_t) * usr->groups_size);
+    MEM_CHECK(usr->groups);
   }
 
-  getgrouplist(user_pw->pw_name, group_gr->gr_gid, groups, &groups_size);
+  GET_GR_LST;
   
-  print_info(user_pw, group_gr, groups, groups_size);
-  
-  free(groups);  
+#undef GET_GR_LST  
+
+  return 1;
 } /* End of 'user_info' function */
 
 /**
  * \brief Process argument string function.
  * \param [in] arg pointer to string with arguments (UID or username).
- * \return None. 
+ * \return 1 if all is ok,
+ * \return code of error otherwise 
  */
-void user_process( const char arg[] )
+int user_process( const char arg[], User_info *usr )
 {
-  Passwd *user_pw  = NULL;
-
   if (isdigit(arg[0]))
   {
     uid_t uid = strtol(arg, NULL, 0);
-    user_pw   = getpwuid(uid);
+    usr->user_pw   = getpwuid(uid);
   }
   else
-    user_pw = getpwnam(arg);
+    usr->user_pw = getpwnam(arg);
     
-  if (user_pw == NULL)
-  {
-    printf("myid: %s: no such user\n", arg);
-    return;
-  }  
+  if (usr->user_pw == NULL)
+    return USR_ERR;
   
-  user_info(user_pw);
+  user_info(usr);
+  
+  return 1;
 } /* End of 'user_process' function */
+
+/**
+ * \brief Processing errors function.
+ * \param [in] err_code  code of error.
+ * \param [in] arr       pointer to string with username or UID (especially for USR_ERR).
+ * \return err_code.
+ */
+int process_error( int err_code, const char arg[] )
+{
+  switch (err_code)
+  {
+  case MEM_ERR:
+    printf("myid: Error with allocating memory\n");
+    break;
+  case USR_ERR:
+    printf("myid: %s: no such user\n", arg);
+    break;
+  default:
+    printf("Unrecognized error code: %d\n", err_code);
+  }
+
+  return err_code;
+} /* End of 'process_error' function*/
 
 /**
  * \brief Main program function.
@@ -128,18 +160,29 @@ void user_process( const char arg[] )
  */
 int main( int argc, char *argv[] )
 {
+  User_info usr = {0};
+  int is_ok = 0;
+
   switch (argc)
   {
   case 1:
-    cur_user_info();
+    is_ok = cur_user_info(&usr);
     break;
   case 2:
-    user_process(argv[1]);   
+    is_ok = user_process(argv[1], &usr);   
     break;
   default:
     printf("Invalid amount of arguments: %d\n", argc);
+    return 0;
   }
-    
+  if (is_ok)  
+    print_info(&usr);
+  else
+    process_error(is_ok, argv[1]);
+  
+  if (usr.groups != NULL)
+    free(usr.groups);
+        
   return 0;
 } /* End of 'main' function */
 
