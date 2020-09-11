@@ -175,7 +175,7 @@ int main( int argc, char *argv[] )
     printf("Invalid amount of arguments: %d\n", argc);
     return 0;
   }
-  if (is_ok)  
+  if (is_ok == 1)  
     print_info(&usr);
   else
     process_error(is_ok, argv[1]);
