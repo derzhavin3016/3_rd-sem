@@ -54,7 +54,6 @@ int PrintFile( int fd )
 
 int main( int argc, char * argv[] )
 {
-
   if (argc == 1 || argv[1][0] == '-')
   {
     if (!PrintFile(STDIN_FILENO))
