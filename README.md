@@ -8,6 +8,6 @@ My homework from 3-rd semester in MIPT.
 
 ## lsn2
 
-* myid.c - my own soft version of 'id' utility. Realised search by uid and by username.
+* myid.c - my own soft version of 'id' utility. Realised searching by uid and username.
 
 ## lsn3
