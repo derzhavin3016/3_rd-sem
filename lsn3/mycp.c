@@ -25,7 +25,7 @@ int MyWrite( int fd, void *buffer, size_t buf_size )
 
   while (bytes_written < buf_size)
   {
-    int write_ret = write(fd, buffer, buf_size);
+    int write_ret = write(fd, buffer, buf_size - bytes_written);
 
     if (write_ret < 0)
       return MyErr("Error with writing to stdout");
