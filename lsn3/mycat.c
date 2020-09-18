@@ -19,7 +19,7 @@ int MyWrite( int fd, void *buffer, size_t buf_size )
 
   while (bytes_written < buf_size)
   {
-    int write_ret = write(STDOUT_FILENO, buffer, buf_size);
+    int write_ret = write(fd, buffer, buf_size);
 
     if (write_ret < 0)
       return MyErr("Error with writing to stdout");
@@ -43,7 +43,7 @@ int PrintFile( int fd )
     if (bytes_read < 0)
       return MyErr("Error with reading file");
 
-    if (MyWrite(fd, buffer, bytes_read))
+    if (MyWrite(STDOUT_FILENO, buffer, bytes_read))
       return 0;
 
   } while (bytes_read != 0);
@@ -65,7 +65,10 @@ int main( int argc, char * argv[] )
   {
     int fd = open(argv[i], O_RDONLY);
     if (fd < 0)
-      return MyErr(argv[i]);
+    {
+      MyErr(argv[i]);
+      continue;
+    }
 
     if (!PrintFile(fd))
       return 1;
