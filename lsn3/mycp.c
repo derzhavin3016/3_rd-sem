@@ -19,6 +19,12 @@
 // useful typedef
 typedef struct option OPT;
 
+enum
+{
+  INV_KEY = -2,
+  END_OF_KEYS = -1
+};
+
 const OPT OPTIONS[] =
   {
     {"force", 0, NULL, 'f'},
@@ -53,6 +59,26 @@ int MyWrite( int fd, void *buffer, size_t buf_size )
   return 0;
 }
 
+int CopyFile( int fd_src, int fd_dest )
+{
+  int bytes_read = 0;
+
+  do
+  {
+    char buffer[BUFFER_SIZE];
+
+    bytes_read = read(fd_src, buffer, BUFFER_SIZE);
+    if (bytes_read < 0)
+      return MyErr("Error with reading file");
+
+    if (MyWrite(fd_dest, buffer, bytes_read))
+      return 0;
+
+  } while (bytes_read != 0);
+
+  return 1;
+}
+
 
 int GetOptions( int argc, char *argv )
 {
@@ -66,10 +92,10 @@ int GetOptions( int argc, char *argv )
     switch (getopt_ret)
     {
     case -1:
-        return flag;
+      return flag;
     case '?':
       printf("Unrecognized option: \"%s\"\n", argv[optind])
-      return -1;
+      return END_OF_KEYS;
     case 'f':
       flag |= F_KEY;
       break;
@@ -81,6 +107,7 @@ int GetOptions( int argc, char *argv )
       break;
     default:
       printf("Unrecognized return value: %d\n", getopt_ret);
+      return INV_KEY;
     }
   }
 }
@@ -88,6 +115,10 @@ int GetOptions( int argc, char *argv )
 int main( int argc, char *argv[] )
 {
   int flags = GetOptions(argc, argv);
+
+  if (flags == INV_KEY)
+    return 1;
+
 
 
 
