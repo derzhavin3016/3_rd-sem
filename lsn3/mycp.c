@@ -214,8 +214,7 @@ int ArrProcess( int flags, char *names[], size_t size )
   for (size_t i = 0; i < size - 1; ++i)
   {
     strcat(buffer, names[i]);
-    if (CopyFile(names[i], buffer, flags) > 0)
-      return 1;
+    CopyFile(names[i], buffer, flags);
     buffer[path_size] = '\0';
   }
 
