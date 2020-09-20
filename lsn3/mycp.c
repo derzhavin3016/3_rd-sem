@@ -174,7 +174,7 @@ int CopyFile( const char *src_name, const char* dst_name, int flags )
 
   int fd_dst = open(dst_name, O_WRONLY | O_CREAT | O_EXCL, MAX_ACCESS);
   if (DstProcess(&fd_dst, dst_name, isF, isI) || ReadWriteFile(fd_src, fd_dst))
-    return 1;
+    return -1;
 
   if (isV)
     PrintVrb(src_name, dst_name);
@@ -203,6 +203,25 @@ int CheckIfDir( const char *filename )
   return -1; // it is a directory
 }
 
+int ArrProcess( int flags, char *names[], size_t size )
+{
+  char buffer[BUFFER_SIZE];
+  strcpy(buffer, names[size - 1]);
+  size_t path_size = strlen(names[size - 1]);
+  buffer[path_size++] = '/';
+  buffer[path_size] = '\0';
+
+  for (size_t i = 0; i < size - 1; ++i)
+  {
+    strcat(buffer, names[i]);
+    if (CopyFile(names[i], buffer, flags) > 0)
+      return 1;
+    buffer[path_size] = '\0';
+  }
+
+  return 0;
+}
+
 int main( int argc, char *argv[] )
 {
   int flags = GetOptions(argc, argv);
@@ -215,14 +234,14 @@ int main( int argc, char *argv[] )
     return 1;
   }
 
-  if (CheckIfDir(argv[argc - 1]))
-  {
-
-  }
-
-  if (CopyFile(argv[optind], argv[optind + 1], flags))
+  int isDir = CheckIfDir(argv[argc - 1]);
+  if (isDir > 0)
+    return 1;
+  if (isDir < 0 && ArrProcess(flags, argv + optind, argc - optind))
     return 1;
 
+  if (!isDir && CopyFile(argv[optind], argv[optind + 1], flags))
+    return 1;
 
   return 0;
 }
