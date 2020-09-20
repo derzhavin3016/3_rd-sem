@@ -187,6 +187,22 @@ int CopyFile( const char *src_name, const char* dst_name, int flags )
   return 0;
 }
 
+int CheckIfDir( const char *filename )
+{
+  int fd = open(filename, O_DIRECTORY);
+  if (fd < 0)
+  {
+    if (errno == ENOTDIR)
+      return 0;  // it is a file
+    return MyErr(filename);
+  }
+
+  if (close(fd) < 0)
+    return MyErr(filename);
+
+  return -1; // it is a directory
+}
+
 int main( int argc, char *argv[] )
 {
   int flags = GetOptions(argc, argv);
@@ -197,6 +213,11 @@ int main( int argc, char *argv[] )
   {
     printf("Too few arguments: %d\n", argc - optind);
     return 1;
+  }
+
+  if (CheckIfDir(argv[argc - 1]))
+  {
+
   }
 
   if (CopyFile(argv[optind], argv[optind + 1], flags))
