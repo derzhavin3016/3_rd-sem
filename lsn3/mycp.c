@@ -154,25 +154,22 @@ int CopyFile( const char *src_name, const char* dst_name, int flags )
   int fd_dst = open(dst_name, O_WRONLY | O_CREAT | O_EXCL, MAX_ACCESS);
   if (fd_dst < 0)
   {
-    if (errno == EEXIST)
+    if (errno == EEXIST && (isI || isF))
     {
-     if (isF || isI)
-     {
-       if (isI && !GetPrompt(dst_name))
-       {
-         close(fd_dst);
-         fd_dst = open(dst_name, O_WRONLY);
-       }
-     }
-     else
-       return MyErr(dst_name);
+      int isCp = 1;
+      if (isI)
+        isCp = !GetPrompt(dst_name);
+      if (!isCp)
+        return 1;
+      fd_dst = open(dst_name, O_WRONLY, MAX_ACCESS);
+      if (fd_dst < 0)
+        return MyErr(dst_name);
+      goto AllOK;
     }
-    else
-      return MyErr(dst_name);
+    return MyErr(dst_name);
   }
-
-
-  if (ReadWriteFile(fd_src, STDOUT_FILENO))
+  AllOK:
+  if (ReadWriteFile(fd_src, fd_dst))
     return 1;
 
   if (isV)
