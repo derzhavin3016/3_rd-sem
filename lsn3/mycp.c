@@ -140,6 +140,30 @@ int GetPrompt( const char* dst_name )
   return -1;
 }
 
+int DstProcess( int *fd_dst, const char *dst_name, int isF, int isI )
+{
+  if (*fd_dst < 0)
+  {
+    if (errno == EEXIST && (isI || isF))
+    {
+      int isCp = 1;
+      if (isI)
+        isCp = !GetPrompt(dst_name);
+      if (!isCp)
+        return 1;
+      *fd_dst = open(dst_name, O_WRONLY, MAX_ACCESS);
+      if (*fd_dst < 0)
+        return MyErr(dst_name);
+      goto AllOK;
+    }
+    return MyErr(dst_name);
+  }
+  // Sorry for label(((
+  AllOK:
+
+  return 0;
+}
+
 int CopyFile( const char *src_name, const char* dst_name, int flags )
 {
   int isF = (flags & F_KEY) && 1,
@@ -152,24 +176,7 @@ int CopyFile( const char *src_name, const char* dst_name, int flags )
     return MyErr(src_name);
 
   int fd_dst = open(dst_name, O_WRONLY | O_CREAT | O_EXCL, MAX_ACCESS);
-  if (fd_dst < 0)
-  {
-    if (errno == EEXIST && (isI || isF))
-    {
-      int isCp = 1;
-      if (isI)
-        isCp = !GetPrompt(dst_name);
-      if (!isCp)
-        return 1;
-      fd_dst = open(dst_name, O_WRONLY, MAX_ACCESS);
-      if (fd_dst < 0)
-        return MyErr(dst_name);
-      goto AllOK;
-    }
-    return MyErr(dst_name);
-  }
-  AllOK:
-  if (ReadWriteFile(fd_src, fd_dst))
+  if (DstProcess(&fd_dst, dst_name, isF, isI) || ReadWriteFile(fd_src, fd_dst))
     return 1;
 
   if (isV)
