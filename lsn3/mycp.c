@@ -154,13 +154,10 @@ int DstProcess( int *fd_dst, const char *dst_name, int isF, int isI )
       *fd_dst = open(dst_name, O_WRONLY, MAX_ACCESS);
       if (*fd_dst < 0)
         return MyErr(dst_name);
-      goto AllOK;
+      return 0;
     }
     return MyErr(dst_name);
   }
-  // Sorry for label(((
-  AllOK:
-
   return 0;
 }
 
