@@ -7,6 +7,8 @@
 
 #define BUFFER_SIZE 4096
 
+__inline int MyErr( char *str_err ) __attribute__((always_inline));
+
 int MyErr( char *str_err )
 {
   perror(str_err);
@@ -79,3 +81,4 @@ int main( int argc, char * argv[] )
 
   return 0;
 }
+

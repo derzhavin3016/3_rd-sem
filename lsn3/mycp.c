@@ -13,6 +13,8 @@
 #define I_KEY 0x2
 #define V_KEY 0x4
 
+__inline int MyErr( char *str_err ) __attribute__((always_inline));
+
 int MyErr( char *str_err )
 {
   perror(str_err);
@@ -37,10 +39,14 @@ int MyWrite( int fd, void *buffer, size_t buf_size )
   return 0;
 }
 
-int GetOptions(  )
+
+int GetOptions( int argc, char *argv )
+{
+
+}
 
 int main( int argc, char *argv[] )
 {
-
+  if
 
 }
