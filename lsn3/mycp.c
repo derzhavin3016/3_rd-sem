@@ -11,10 +11,13 @@
 
 #define BUFFER_SIZE 4096
 
+#define MAX_ACCESS 0777
+
 // Keys bits constants
 #define F_KEY 0x1
 #define I_KEY 0x2
 #define V_KEY 0x4
+
 
 // useful typedef
 typedef struct option OPT;
@@ -33,15 +36,15 @@ const OPT OPTIONS[] =
   };
 const char OPT_STR[] = "fiv";
 
-__inline int MyErr( char *str_err ) __attribute__((always_inline));
+__inline int MyErr( const char *str_err ) __attribute__((always_inline));
 
-int MyErr( char *str_err )
+int MyErr( const char *str_err )
 {
   perror(str_err);
   return errno;
 }
 
-int MyWrite( int fd, void *buffer, size_t buf_size )
+int MyWrite( int fd, const void *buffer, size_t buf_size )
 {
   size_t bytes_written = 0;
 
@@ -50,7 +53,7 @@ int MyWrite( int fd, void *buffer, size_t buf_size )
     int write_ret = write(fd, buffer, buf_size - bytes_written);
 
     if (write_ret < 0)
-      return MyErr("Error with writing to stdout");
+      return MyErr("Error with writing in file");
 
     bytes_written += write_ret;
     buffer += write_ret;
@@ -59,7 +62,7 @@ int MyWrite( int fd, void *buffer, size_t buf_size )
   return 0;
 }
 
-int CopyFile( int fd_src, int fd_dest )
+int ReadWriteFile( int fd_src, int fd_dst )
 {
   int bytes_read = 0;
 
@@ -71,31 +74,30 @@ int CopyFile( int fd_src, int fd_dest )
     if (bytes_read < 0)
       return MyErr("Error with reading file");
 
-    if (MyWrite(fd_dest, buffer, bytes_read))
-      return 0;
+    if (MyWrite(fd_dst, buffer, bytes_read))
+      return 1;
 
   } while (bytes_read != 0);
 
-  return 1;
+  return 0;
 }
 
 
-int GetOptions( int argc, char *argv )
+int GetOptions( int argc, char *argv[] )
 {
   int getopt_ret = 0;
   int flag = 0;
 
   while (1)
   {
-    getopt_ret = getopt_long(argc, argv, OPT_STR, OPTIONS);
+    getopt_ret = getopt_long(argc, argv, OPT_STR, OPTIONS, NULL);
 
     switch (getopt_ret)
     {
     case -1:
       return flag;
     case '?':
-      printf("Unrecognized option: \"%s\"\n", argv[optind])
-      return END_OF_KEYS;
+      return INV_KEY;
     case 'f':
       flag |= F_KEY;
       break;
@@ -112,14 +114,92 @@ int GetOptions( int argc, char *argv )
   }
 }
 
+void PrintVrb( const char *src_name, const char *dst_name )
+{
+  printf("\'%s\' -> \'%s\'\n", src_name, dst_name);
+}
+
+void WritePrompt( const char* dst_name )
+{
+  const char fst[] = "cp: rewrite '";
+  const char sec[] = "'? ";
+
+  MyWrite(STDOUT_FILENO, fst, sizeof(fst));
+  MyWrite(STDOUT_FILENO, dst_name, strlen(dst_name));
+  MyWrite(STDOUT_FILENO, sec, sizeof(sec));
+}
+
+int GetPrompt( const char* dst_name )
+{
+  WritePrompt(dst_name);
+  char buffer[BUFFER_SIZE];
+  if (read(STDIN_FILENO, buffer, BUFFER_SIZE) <0)
+    return MyErr("cp: Error with stdin: ");
+  if (toupper(buffer[0]) == 'Y')
+    return 0;
+  return -1;
+}
+
+int CopyFile( const char *src_name, const char* dst_name, int flags )
+{
+  int isF = (flags & F_KEY) && 1,
+      isI = (flags & I_KEY) && 1,
+      isV = (flags & V_KEY) && 1;
+
+  int fd_src = open(src_name, O_RDONLY, MAX_ACCESS);
+
+  if (fd_src < 0)
+    return MyErr(src_name);
+
+  int fd_dst = open(dst_name, O_WRONLY | O_CREAT | O_EXCL, MAX_ACCESS);
+  if (fd_dst < 0)
+  {
+    if (errno == EEXIST)
+    {
+     if (isF || isI)
+     {
+       if (isI && !GetPrompt(dst_name))
+       {
+         close(fd_dst);
+         fd_dst = open(dst_name, O_WRONLY);
+       }
+     }
+     else
+       return MyErr(dst_name);
+    }
+    else
+      return MyErr(dst_name);
+  }
+
+
+  if (ReadWriteFile(fd_src, STDOUT_FILENO))
+    return 1;
+
+  if (isV)
+    PrintVrb(src_name, dst_name);
+
+  if (close(fd_dst) < 0)
+    return MyErr(dst_name);
+
+  if (close(fd_src) < 0)
+    return MyErr(src_name);
+  return 0;
+}
+
 int main( int argc, char *argv[] )
 {
   int flags = GetOptions(argc, argv);
 
   if (flags == INV_KEY)
     return 1;
+  if (argc - optind < 2)
+  {
+    printf("Too few arguments: %d\n", argc - optind);
+    return 1;
+  }
 
-
+  if (CopyFile(argv[optind], argv[optind + 1], flags))
+    return 1;
 
 
   return 0;
