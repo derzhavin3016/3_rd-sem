@@ -33,6 +33,7 @@ const OPT OPTIONS[] =
     {"force", 0, NULL, 'f'},
     {"interactive", 0, NULL, 'i'},
     {"verbose", 0, NULL, 'v'},
+    {0, 0, 0, 0},
   };
 const char OPT_STR[] = "fiv";
 
