@@ -13,6 +13,7 @@ int MyErr( char *str_err )
   return errno;
 }
 
+#define SLEEP_CONST 1000
 
 int main( int argc, char *argv[] )
 {
@@ -24,18 +25,16 @@ int main( int argc, char *argv[] )
     {
       int num = atoi(argv[i]);
 
-      usleep(num * 1000);
+      usleep(num * SLEEP_CONST);
       printf("%d ", num);
       return 0;
     }
   }
 
   for (int i = 1; i < argc; ++i)
-  {
-    int status = 0;
-    if (wait(&status) < 0)
+    if (wait(NULL) < 0)
       return MyErr("Process error: ");
-  }
+
   printf("\n");
 
   return 0;

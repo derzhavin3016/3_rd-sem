@@ -21,7 +21,7 @@ int main( int argc, char *argv[] )
   if (argc == 1)
     return 1;
 
-  timespc t_beg = {}, t_end = {};
+  timespc t_beg = {};
 
   clock_gettime(CLOCK_MONOTONIC, &t_beg);
   pid_t pid = fork();
@@ -31,11 +31,11 @@ int main( int argc, char *argv[] )
     execvp(argv[1], argv + 1);
     exit(0);
   }
-  int status = 0;
 
-  if (wait(&status) < 0)
+  if (wait(NULL) < 0)
     return MyErr("Proc err");
 
+  timespc t_end = {};
   clock_gettime(CLOCK_MONOTONIC, &t_end);
 
   int exec_sec =  t_end.tv_sec - t_beg.tv_sec;
