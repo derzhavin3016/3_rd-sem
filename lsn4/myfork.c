@@ -18,7 +18,8 @@ int main( int argc, char *argv[] )
     return 1;
 
   int N = strtol(argv[1], NULL, 0);
-  int isParPrint = 0;
+
+  printf("parent %d\n", getpid());
 
   for (int i = 0; i < N; ++i)
   {
@@ -31,11 +32,6 @@ int main( int argc, char *argv[] )
     {
       printf("child %d %d\n", getpid(), getppid());
       exit(0);
-    }
-    else if (!isParPrint)
-    {
-      isParPrint = 1;
-      printf("parent %d\n", getpid());
     }
   }
 
