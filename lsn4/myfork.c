@@ -12,15 +12,8 @@ int MyErr( char *str_err )
   return errno;
 }
 
-int main( int argc, char *argv[] )
+int EasyFork( int N )
 {
-  if (argc == 1)
-    return 1;
-
-  int N = strtol(argv[1], NULL, 0);
-
-  printf("parent %d\n", getpid());
-
   for (int i = 0; i < N; ++i)
   {
     pid_t pid = fork();
@@ -34,9 +27,19 @@ int main( int argc, char *argv[] )
       exit(0);
     }
   }
+  return 0;
+}
 
+int main( int argc, char *argv[] )
+{
+  if (argc == 1)
+    return 1;
 
+  int N = strtol(argv[1], NULL, 0);
 
+  printf("parent %d\n", getpid());
+
+  EasyFork(N);
 
   return 0;
 }
