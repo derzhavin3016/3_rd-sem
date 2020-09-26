@@ -21,3 +21,10 @@ and
 ```
 mycp [OPTIONS] file1 file2 file3 ... destination_folder
 ```
+
+## lsn4
+
+* ```myfork.c``` - program which creates N streams in program and print it's ```PID``` and ```PPID``` in terminal.
+* ```sleepsort.c``` - sorting numbers by sleeping in parallel streams (time depends of number) and printing numbers.
+* ```mytime.c``` - utility which measure executing tume of any program by using ```exec``` functions family.
+* ```myls.c``` - my own soft version of ```ls``` utility. (in process)
