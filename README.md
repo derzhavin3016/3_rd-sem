@@ -28,3 +28,7 @@ mycp [OPTIONS] file1 file2 file3 ... destination_folder
 * ```sleepsort.c``` - sorting numbers by sleeping in parallel streams (time depends of number) and printing numbers.
 * ```mytime.c``` - utility which measure executing tume of any program by using ```exec``` functions family.
 * ```myls.c``` - my own soft version of ```ls``` utility. (in process)
+
+## lsn5
+
+* ```myexecwc.c``` - version of ```mytime.c``` with key ```--wc``` which count strings, words and bytes from **STDOUT** of executing program.
