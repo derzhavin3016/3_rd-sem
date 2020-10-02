@@ -19,7 +19,7 @@ mycp [OPTIONS] source_file destination_file
 ```
 and
 ```
-mycp [OPTIONS] file1  ... filen destination_folder
+mycp [OPTIONS] file_1 ... file_N destination_folder
 ```
 
 ## lsn4
@@ -34,6 +34,6 @@ mycp [OPTIONS] file1  ... filen destination_folder
 * ```myexecwc.c``` - version of ```mytime.c``` with key ```--wc``` which count strings, words and bytes from **STDOUT** of executing program. Pipe is used.
 * ```myshell.c``` - soft shell environment program. Wait for input in form 
 ```
-$ prog1 [OPTIONS] | ... | progn[OPTIONS]
+$ prog_1 [OPTIONS] | ... | prog_N [OPTIONS]
 ```
  and organize ```n - 1``` succesive pipes in described order.
