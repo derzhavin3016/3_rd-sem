@@ -90,22 +90,22 @@ int StrCnt( char *buf, size_t size )
   return cnt;
 }
 
-int WrdCnt( char *buf, size_t size )
+int WrdCnt( char *buf, size_t size, int *isword )
 {
   if (buf == NULL)
     return -1;
 
-  int cnt = 0, isword = 0;
+  int cnt = 0;
 
   for (size_t i = 0; i < size; ++i)
   {
-    if (!isspace(buf[i]) && !isword)
+    if (!isspace(buf[i]) && !*isword)
     {
       ++cnt;
-      isword = 1;
+      *isword = 1;
     }
     else if (isspace(buf[i]))
-      isword = 0;
+      *isword = 0;
   }
 
   return cnt;
@@ -117,6 +117,7 @@ int WordCount( int fd_in, WC *w_cnt )
     return -1;
   int bytes_read = 0;
   w_cnt->bytes = w_cnt->strings = w_cnt->words = 0;
+  int isword = 0;
 
   do
   {
@@ -128,7 +129,7 @@ int WordCount( int fd_in, WC *w_cnt )
 
     w_cnt->bytes   += bytes_read;
     w_cnt->strings += StrCnt(buffer, bytes_read);
-    w_cnt->words   += WrdCnt(buffer, bytes_read);
+    w_cnt->words   += WrdCnt(buffer, bytes_read, &isword);
 
   } while (bytes_read != 0);
 
