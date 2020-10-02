@@ -19,7 +19,7 @@ mycp [OPTIONS] source_file destination_file
 ```
 and
 ```
-mycp [OPTIONS] file1 file2 file3 ... destination_folder
+mycp [OPTIONS] file1  ... filen destination_folder
 ```
 
 ## lsn4
