@@ -95,14 +95,17 @@ int WrdCnt( char *buf, size_t size )
   if (buf == NULL)
     return -1;
 
-  int cnt = 0;
+  int cnt = 0, isword = 0;
 
   for (size_t i = 0; i < size; ++i)
   {
-    size_t j = i;
-    for (; j < size && !isspace((int)buf[j]); ++j);
-    cnt += i != j && j < size;
-    i = j;
+    if (!isspace(buf[i]) && !isword)
+    {
+      ++cnt;
+      isword = 1;
+    }
+    else if (isspace(buf[i]))
+      isword = 0;
   }
 
   return cnt;
