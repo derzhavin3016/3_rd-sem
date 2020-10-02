@@ -134,7 +134,6 @@ int WordCount( int fd_in, WC *w_cnt )
 
 int main( int argc, char *argv[] )
 {
-  opterr = 0;
   int iswc = GetOptions(argc, argv);
 
   if (iswc == INV_KEY)
