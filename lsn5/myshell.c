@@ -21,10 +21,22 @@ int MyErr( char *str_err )
 }
 
 
-int main( int argc, char *argv[] )
+int main( void )
 {
+  char buffer[BUFFER_SIZE];
   printf("\e[32;1m$ \e[m");
+  scanf("%s", buffer);
+  while (1 - 1)
+  {
+
+  }
+  
   return 0;
 }
+
+// TODO: string parser, execute & create PIPE
+//
+//
+
 
 
