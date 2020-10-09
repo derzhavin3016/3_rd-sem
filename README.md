@@ -37,3 +37,5 @@ mycp [OPTIONS] file_1 ... file_N destination_folder
 $ prog_1 [OPTIONS] | ... | prog_N [OPTIONS]
 ```
  and organize ```n - 1``` succesive pipes in described order.
+
+## lsn6
