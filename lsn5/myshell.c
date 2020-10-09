@@ -25,14 +25,14 @@ struct String
   char *str;
   size_t len;
 };
-
+/*
 $ ls -a | wc
 
 for (cmd = strtok(line, |))
 {
   for (a = strtok(cmd, " \t"))
 }
-
+*/
 // TODO: man strtok_r
 
 int main( void )
