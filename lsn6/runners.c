@@ -29,22 +29,25 @@ typedef struct tagMsg
   char buf[MSG_SIZE];
 } Msg;
 
+#define JUDGE_ID (N + 2)
+
 int Judge( int que_id, int N )
 {
   Msg message;
 
   printf("Hello, Judge!\n");
   for (int i = 1; i <= N; ++i)
-    msgrcv(que_id, &message, MSG_SIZE, N + 1, 0);
+    msgrcv(que_id, &message, MSG_SIZE, JUDGE_ID, 0);
 
   printf("Competition start!\n");
 
-  message.type = N + 2;
+  message.type = 1;
   msgsnd(que_id, &message, MSG_SIZE, 0);
 
-  msgrcv(que_id, &message, MSG_SIZE, N, 0);
+  msgrcv(que_id, &message, MSG_SIZE, N + 1, 0);
 
   printf("End of competition\n");
+
   for (int i = 1; i <= N; ++i)
   {
     message.type = i;
@@ -60,25 +63,28 @@ int Runner( int que_id, int number, int N )
 
   printf("Hello, runner #%d\n", number);
   // inform judge that runner has come
-  message.type = N + 1;
+  message.type = JUDGE_ID;
   msgsnd(que_id, &message, MSG_SIZE, 0);
 
-  // wait for the palka from previous runner
-  msgrcv(que_id, &message, MSG_SIZE, (number == 1) ? N + 2 : (number - 1), MSG_NOERROR);
+  // wait for the stick from previous runner
+  msgrcv(que_id, &message, MSG_SIZE, number, MSG_NOERROR);
+
   // start running
   printf("!runner #%d start\n", number);
 
-  // give palka to next runner
-  message.type = number;
+  // give stick to next runner
+  message.type = number + 1;
   printf("!runner #%d end\n", number);
   msgsnd(que_id, &message, MSG_SIZE, 0);
 
-  // wait for judge
+  // wait for judge & go home
   msgrcv(que_id, &message, MSG_SIZE, number, 0);
   printf("Runner %d go home!\n", number);
 
   return 0;
 }
+
+#undef JUDGE_ID
 
 int main( int argc, char *argv[] )
 {
