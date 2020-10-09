@@ -98,18 +98,24 @@ int main( int argc, char *argv[] )
 
   setvbuf(stdout, buffer, _IOLBF, BUFFER_SIZE);
 
+  key_t que_key = ftok(argv[0], 0);
+
   int num = atoi(argv[1]);
 
   // creator process
-  int id = msgget(IPC_PRIVATE, IPC_CREAT | 0700);
+  int id = msgget(que_key, IPC_CREAT | 0700);
 
   // create judge process
   pid_t pid_jdg = fork();
 
+  if (pid_jdg < 0)
+    return MyErr("Error with process:");
+
   if (pid_jdg == 0)
   {
     // judge process
-    Judge(id, num);
+    int judge_id = msgget(que_key, 0700);
+    Judge(judge_id, num);
     return 0;
   }
   for (int i = 1; i <= num; ++i)
@@ -121,8 +127,9 @@ int main( int argc, char *argv[] )
 
     if (pid == 0)
     {
-      // runner
-      Runner(id, i, num);
+      // runner process
+      int runner_id = msgget(que_key, 0700);
+      Runner(runner_id, i, num);
       return 0;
     }
   }
