@@ -35,6 +35,13 @@ for (cmd = strtok(line, |))
 */
 // TODO: man strtok_r
 
+typedef struct tagCMDS
+{
+
+} CMDS;
+
+ParseStr( char *buffer )
+
 int main( void )
 {
   char buffer[BUFFER_SIZE];
