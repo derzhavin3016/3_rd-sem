@@ -20,17 +20,31 @@ int MyErr( char *str_err )
   return errno;
 }
 
+struct String
+{
+  char *str;
+  size_t len;
+};
+
+$ ls -a | wc
+
+for (cmd = strtok(line, |))
+{
+  for (a = strtok(cmd, " \t"))
+}
+
+// TODO: man strtok_r
 
 int main( void )
 {
   char buffer[BUFFER_SIZE];
   printf("\e[32;1m$ \e[m");
   scanf("%s", buffer);
-  while (1 - 1)
-  {
+  size_t
 
-  }
-  
+
+  CMD_ARGS *args = ParseStr()
+
   return 0;
 }
 
