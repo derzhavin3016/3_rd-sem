@@ -36,18 +36,24 @@ int Judge( int que_id, int N )
   Msg message;
 
   printf("Hello, Judge!\n");
+  // wait for every runner
   for (int i = 1; i <= N; ++i)
     msgrcv(que_id, &message, MSG_SIZE, JUDGE_ID, 0);
 
+  // start competition
   printf("Competition start!\n");
 
+  // give stick to first runner
   message.type = 1;
   msgsnd(que_id, &message, MSG_SIZE, 0);
 
+  // get stick from last runner
   msgrcv(que_id, &message, MSG_SIZE, N + 1, 0);
 
+  // end competition
   printf("End of competition\n");
 
+  // release every runner
   for (int i = 1; i <= N; ++i)
   {
     message.type = i;
