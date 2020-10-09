@@ -36,6 +36,8 @@ mycp [OPTIONS] file_1 ... file_N destination_folder
 ```
 $ prog_1 [OPTIONS] | ... | prog_N [OPTIONS]
 ```
- and organize ```n - 1``` succesive pipes in described order.
+ and organize ```n - 1``` succesive pipes in described order. (in process, not ready yet)
 
 ## lsn6
+
+* ```runners.c``` - demonstration program, which simulates a runners competition. Creates an judge and ```N``` runners (from cmd args), and then inform about every action : starting competition, starting of every runner, end of competition, etc. 
