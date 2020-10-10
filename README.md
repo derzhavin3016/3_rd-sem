@@ -47,4 +47,4 @@ My homework from 3-rd semester in MIPT.
   * First runner gives stick to second and so on. 
   * Judge end the competition and all runners go home.
 
-  All interaction organized by messages (SCv5).
+  All interaction organized by messages ```SCv5```.
