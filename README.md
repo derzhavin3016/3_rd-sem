@@ -14,13 +14,13 @@ My homework from 3-rd semester in MIPT.
 
 * ```mycat.c``` - my own soft version of ```cat``` utility. Realised writing from stdout or from some files. 
 * ```mycp.c``` - my own soft version of ```cp``` utility. Realised keys ```-f```, ```-v```, ```-i``` and long analogs. Works in 2 modes:
-```
-mycp [OPTIONS] source_file destination_file
-```
-and
-```
-mycp [OPTIONS] file_1 ... file_N destination_folder
-```
+  ```
+  mycp [OPTIONS] source_file destination_file
+  ```
+  and
+  ```
+  mycp [OPTIONS] file_1 ... file_N destination_folder
+  ```
 
 ## lsn4
 
