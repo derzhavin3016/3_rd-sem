@@ -46,4 +46,5 @@ $ prog_1 [OPTIONS] | ... | prog_N [OPTIONS]
   * Judge start the competition, and give stick to the first runner.
   * First runner gives stick to second and so on. 
   * Judge end the competition and all runners go home.
-  All interaction organized by messages (SCv5).
+
+All interaction organized by messages (SCv5).
