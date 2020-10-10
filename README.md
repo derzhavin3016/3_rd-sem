@@ -40,4 +40,4 @@ $ prog_1 [OPTIONS] | ... | prog_N [OPTIONS]
 
 ## lsn6
 
-* ```runners.c``` - demonstration program, which simulates a runners competition. Creates an judge and ```N``` runners (from cmd args), and then inform about every action : starting competition, starting of every runner, end of competition, etc. 
+* ```runners.c``` - demonstration program, which simulates a runners competition. Creates a judge and ```N``` runners (from cmd args), and then inform about every action : firstly, the judge and runners come to the competition and print a message about it, then judge waits for all runners and then start the competition, and give command to start to the first runner, then first runner gives command to second and so on. After all, judge end the competition and all runners go home.
