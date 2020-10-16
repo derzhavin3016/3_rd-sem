@@ -30,6 +30,9 @@ int Min( int a, int b )
 {
   return a < b ? a : b;
 }
+////////////////////////////////////////////////////////////////////////
+///////////SEMAPHORES HANDLE
+/////////////////////////////////////////////////////////////////
 
 union semun
 {
@@ -51,32 +54,33 @@ enum Semaphores
 {
   IN = 0,
   OUT,
-  BOAT
+  BOAT,
+  LOAD
 };
 
 void P( enum Semaphores sem_num, int n )
 {
   assert(n > 0);
 
-  struct sembuf sem = {sem_num, -n, 0};
+  struct sembuf sem[] = {{sem_num, -n, 0}};
 
-  semop(sem_id, &sem, 1);
+  semop(sem_id, sem, 1);
 }
 
 void V( enum Semaphores sem_num, int n )
 {
   assert(n > 0);
 
-  struct sembuf sem = {sem_num, n, 0};
+  struct sembuf sem[] = {{sem_num, n, 0}};
 
-  semop(sem_id, &sem, 1);
+  semop(sem_id, sem, 1);
 }
 
 void Z( enum Semaphores sem_num )
 {
-  struct sembuf sem = {sem_num, 0, 0};
+  struct sembuf sem[] = {{sem_num, 0, 0}};
 
-  semop(sem_id, &sem, 1);
+  semop(sem_id, sem, 1);
 }
 
 void SetSemVal( enum Semaphores sem_num, int val )
@@ -86,28 +90,37 @@ void SetSemVal( enum Semaphores sem_num, int val )
 
   semctl(sem_id, sem_num, SETVAL, &dummy, &VALUE);
 }
-
-
-int GetSemVal( enum Semaphores sem_num )
-{
-  return semctl(sem_id, sem_num, GETVAL);
-}
 ///////////////////////////////////////////////////////
 
 int Capitan( int num_of_chill )
 {
-  struct semid_ds dummy;
-  union semun in = {Min(n_pass, trap_cap)},
-              out = {0},
-              boat = {boat_cap};
+  int min_boat_pass = Min(boat_cap, n_pass);
 
-  semctl(sem_id, IN, SETVAL, &dummy, &in);
-  semctl(sem_id, OUT, SETVAL, &dummy, &out);
-  semctl(sem_id, BOAT, SETVAL, &dummy, &boat);
 
+  printf("Capitan in bay\nLadder down\n");
   for (int i = 0; i < num_of_chill; ++i)
   {
+    // wating for loading
+    Z(BOAT);
+    // ladder up
+    printf("Let ladder up\n");
+    V(LOAD, 1);
+    printf("Ladder up\n");
+    // set trap state for zero (put up trap)
+    P(IN, trap_cap);
+    printf("End of loading\n");
+    printf("!!!START OF A JOURNEY #%d\n", i);
+    // chilllllllll
 
+    // wait for unloading
+    V(BOAT, min_boat_pass);
+    printf("!!!END OF JOURNEY #%d\n", i);
+    Z(BOAT);
+    printf("End of unloading\n");
+
+    //set trap state fro non zero (get ready for new journey)
+    V(IN, trap_cap);
+    P(LOAD, 1);
   }
 
   return 0;
@@ -115,26 +128,32 @@ int Capitan( int num_of_chill )
 
 int Pass( int i_pass )
 {
-  // check if there is a place on boat
-  if (GetSemVal(BOAT) != 0)
-  {
-    // go on trap
-    P(IN, 1);
-    printf("Pass #%d go to trap\n", i_pass);
+  // check if there is a boat
+  Z(LOAD);
 
-    // go on boat
-    P(BOAT, 1);
-    printf("Pass #%d is on boat\n", i_pass);
-    // go from trap
-    V(IN, 1);
-  }
+  // go on boat
+  P(BOAT, 1);
+  printf("Pass #%d buy a ticket to boat\n", i_pass);
 
+  // go on trap
+  P(IN, 1);
+  printf("Pass #%d go to trap\n", i_pass);
+  // go from trap
+  V(IN, 1);
+  printf("Pass #%d has gone from ladder\n", i_pass);
 
-  // here passenger chills on boat
+  // chill on boat
+  printf("Pass #%d is on boat\n", i_pass);
+  printf("Pass #%d chilling\n", i_pass);
 
+  // go from boat
+  P(OUT, 1);
+  printf("Pass #%d go from boat\n", i_pass);
+  V(OUT, 1);
+  printf("Pass #%d is on the ground\n", i_pass);
+  P(BOAT, 1);
 
-
-  return 0;
+  return 1;
 }
 
 int main( int argc, char *argv[] )
@@ -155,7 +174,12 @@ int main( int argc, char *argv[] )
   setvbuf(stdout, buffer, _IOLBF, BUFFER_SIZE);
   //key_t sem_key = ftok(I, 0);
 
-  sem_id = semget(IPC_PRIVATE, 3, MAX_ACCESS);
+  sem_id = semget(IPC_PRIVATE, 4, MAX_ACCESS);
+
+  SetSemVal(IN, trap_cap);
+  SetSemVal(OUT, trap_cap);
+  SetSemVal(BOAT, Min(boat_cap, n_pass));
+  SetSemVal(LOAD, 0);
 
   pid_t cap_pid = fork();
 
