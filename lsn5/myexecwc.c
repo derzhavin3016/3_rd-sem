@@ -146,7 +146,7 @@ int main( int argc, char *argv[] )
   int pip_fd[2] = {0};
 
   if (iswc && pipe(pip_fd) < 0)
-    return MyErr("myexecwc: ");
+    return MyErr("myexecwc:");
 
   timespc t_beg = {};
 
