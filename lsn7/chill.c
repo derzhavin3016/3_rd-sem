@@ -55,7 +55,8 @@ enum Semaphores
   IN = 0,
   OUT,
   BOAT,
-  LOAD
+  IS_LOAD,
+  IS_UNLOAD
 };
 
 void P( enum Semaphores sem_num, int n )
@@ -96,31 +97,37 @@ int Capitan( int num_of_chill )
 {
   int min_boat_pass = Min(boat_cap, n_pass);
 
+  V(IN,   trap_cap);
+  V(OUT,  trap_cap);
+  V(BOAT, min_boat_pass);
+  V(IS_LOAD, 1);
+  V(IS_UNLOAD, 1);
 
   printf("Capitan in bay\nLadder down\n");
   for (int i = 0; i < num_of_chill; ++i)
   {
-    // wating for loading
+    P(IS_LOAD, 1);
+    // wating for passengers on boat
     Z(BOAT);
-    // ladder up
-    printf("Let ladder up\n");
-    V(LOAD, 1);
-    printf("Ladder up\n");
-    // set trap state for zero (put up trap)
-    P(IN, trap_cap);
-    printf("End of loading\n");
-    printf("!!!START OF A JOURNEY #%d\n", i);
-    // chilllllllll
-
-    // wait for unloading
     V(BOAT, min_boat_pass);
-    printf("!!!END OF JOURNEY #%d\n", i);
-    Z(BOAT);
-    printf("End of unloading\n");
+    // ladder up
+    V(IS_LOAD, 1);
+    printf("Ladder is up\n");
+    // starting journey
+    printf("Journey start\n");
 
-    //set trap state fro non zero (get ready for new journey)
-    V(IN, trap_cap);
-    P(LOAD, 1);
+    // journeyy
+    printf("CHILLIN......\n");
+
+    // end journey
+    printf("Journey end\n");
+    printf("Ladder is down\n");
+    P(IS_UNLOAD, 1);
+
+    Z(BOAT);
+    printf("Boat is unload\n");
+    V(BOAT, min_boat_pass);
+    V(IS_UNLOAD, 1);
   }
 
   return 0;
@@ -128,29 +135,34 @@ int Capitan( int num_of_chill )
 
 int Pass( int i_pass )
 {
-  // check if there is a boat
-  Z(LOAD);
+  // Waiting
+  Z(IS_LOAD);
 
-  // go on boat
-  P(BOAT, 1);
-  printf("Pass #%d buy a ticket to boat\n", i_pass);
-
-  // go on trap
+  // step on ladder
   P(IN, 1);
-  printf("Pass #%d go to trap\n", i_pass);
-  // go from trap
+  printf("Pass #%d step on a ladder\n", i_pass);
+
+  // step out from boat
+  printf("Pass #%d step out from a ladder\n", i_pass);
   V(IN, 1);
-  printf("Pass #%d has gone from ladder\n", i_pass);
 
-  // chill on boat
-  printf("Pass #%d is on boat\n", i_pass);
-  printf("Pass #%d chilling\n", i_pass);
+  // step on boat
+  P(BOAT, 1);
+  printf("Pass #%d is on the boat\n", i_pass);
 
-  // go from boat
+  //printf("Pass #%d chilling\n", i_pass);
+  Z(IS_UNLOAD);
+
+  // step from boat
+  printf("Pass #%d step out from boat\n", i_pass);
+
+  // step on ladder
   P(OUT, 1);
-  printf("Pass #%d go from boat\n", i_pass);
+  printf("Pass #%d step on a ladder (exit)\n", i_pass);
+
+  // step out from boat
+  printf("Pass #%d step out from a ladder (exit)\n", i_pass);
   V(OUT, 1);
-  printf("Pass #%d is on the ground\n", i_pass);
   P(BOAT, 1);
 
   return 1;
@@ -174,12 +186,7 @@ int main( int argc, char *argv[] )
   setvbuf(stdout, buffer, _IOLBF, BUFFER_SIZE);
   //key_t sem_key = ftok(I, 0);
 
-  sem_id = semget(IPC_PRIVATE, 4, MAX_ACCESS);
-
-  SetSemVal(IN, trap_cap);
-  SetSemVal(OUT, trap_cap);
-  SetSemVal(BOAT, Min(boat_cap, n_pass));
-  SetSemVal(LOAD, 0);
+  sem_id = semget(IPC_PRIVATE, 5, MAX_ACCESS);
 
   pid_t cap_pid = fork();
 
