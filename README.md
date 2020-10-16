@@ -48,3 +48,5 @@ My homework from 3-rd semester in MIPT.
   * Judge end the competition and all runners go home.
 
   All interaction organized by messages ```SCv5```.
+
+## lsn7
