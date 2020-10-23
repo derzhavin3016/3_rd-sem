@@ -58,7 +58,9 @@ enum Semaphores
   BOAT_OUT,
   IS_LOAD,
   IS_UNLOAD,
-  IS_JRN
+  IS_JRN,
+  NEXT_CYC,
+  WT
 };
 
 int P( enum Semaphores sem_num, int n )
@@ -111,11 +113,15 @@ int Capitan( int num_of_chill )
   V(BOAT_OUT, min_boat_pass);
   V(IS_LOAD, 1);
   V(IS_UNLOAD, 1);
-  V(IS_JRN, 1);
+  V(NEXT_CYC, 1);
+  V(WT, n_pass);
 
   printf("Capitan in bay\nLadder down\n");
   for (int i = 0; i < num_of_chill; ++i)
   {
+    Z(WT);
+    P(NEXT_CYC, 1);
+
     P(IS_LOAD, 1);
     // wating for passengers on boat
     Z(BOAT_IN);
@@ -139,9 +145,15 @@ int Capitan( int num_of_chill )
     V(BOAT_OUT, min_boat_pass);
     V(IS_UNLOAD, 1);
     printf("Next cycle\n");
+    V(NEXT_CYC, 1);
+    printf("searching for pass\n");
+    V(WT, n_pass);
   }
-  P(IS_JRN, 1);
+  printf("preparing for depart\n");
+  Z(WT);
   printf("Capitan is out of bay\n");
+  V(IS_JRN, 1);
+  P(NEXT_CYC, 1);
   return 0;
 }
 
@@ -187,7 +199,18 @@ int Pass_cycle( int i_pass )
 {
   int cnt = 0;
   while (1)
+  {
+    // waits for next cycle (synhronize point)
+    printf("Pass #%d stay on ground\n", i_pass);
+    P(WT, 1);
+    Z(NEXT_CYC);
+    if (Z_FLG(IS_JRN, IPC_NOWAIT) == -1 && errno ==  EAGAIN)
+    {
+      printf("Pass #%i go home\n", i_pass);
+      break;
+    }
     cnt += Pass(i_pass);
+  }
 
 
   return cnt;
@@ -211,7 +234,7 @@ int main( int argc, char *argv[] )
   setvbuf(stdout, buffer, _IOLBF, BUFFER_SIZE);
   //key_t sem_key = ftok(I, 0);
 
-  sem_id = semget(IPC_PRIVATE, 7, MAX_ACCESS);
+  sem_id = semget(IPC_PRIVATE, 9, MAX_ACCESS);
 
   pid_t cap_pid = fork();
 
