@@ -54,34 +54,41 @@ enum Semaphores
 {
   IN = 0,
   OUT,
-  BOAT,
+  BOAT_IN,
+  BOAT_OUT,
   IS_LOAD,
-  IS_UNLOAD
+  IS_UNLOAD,
+  IS_JRN
 };
 
-void P( enum Semaphores sem_num, int n )
+int P( enum Semaphores sem_num, int n )
 {
   assert(n > 0);
 
   struct sembuf sem[] = {{sem_num, -n, 0}};
 
-  semop(sem_id, sem, 1);
+  return semop(sem_id, sem, 1);
 }
 
-void V( enum Semaphores sem_num, int n )
+int V( enum Semaphores sem_num, int n )
 {
   assert(n > 0);
 
   struct sembuf sem[] = {{sem_num, n, 0}};
 
-  semop(sem_id, sem, 1);
+  return semop(sem_id, sem, 1);
 }
 
-void Z( enum Semaphores sem_num )
+int Z_FLG( enum Semaphores sem_num, short flags )
 {
-  struct sembuf sem[] = {{sem_num, 0, 0}};
+  struct sembuf sem[] = {{sem_num, 0, flags}};
 
-  semop(sem_id, sem, 1);
+  return semop(sem_id, sem, 1);
+}
+
+int Z( enum Semaphores sem_num )
+{
+  return Z_FLG(sem_num, 0);
 }
 
 void SetSemVal( enum Semaphores sem_num, int val )
@@ -97,19 +104,22 @@ int Capitan( int num_of_chill )
 {
   int min_boat_pass = Min(boat_cap, n_pass);
 
+  // inital semaphores values
   V(IN,   trap_cap);
   V(OUT,  trap_cap);
-  V(BOAT, min_boat_pass);
+  V(BOAT_IN, min_boat_pass);
+  V(BOAT_OUT, min_boat_pass);
   V(IS_LOAD, 1);
   V(IS_UNLOAD, 1);
+  V(IS_JRN, 1);
 
   printf("Capitan in bay\nLadder down\n");
   for (int i = 0; i < num_of_chill; ++i)
   {
     P(IS_LOAD, 1);
     // wating for passengers on boat
-    Z(BOAT);
-    V(BOAT, min_boat_pass);
+    Z(BOAT_IN);
+    V(BOAT_IN, min_boat_pass);
     // ladder up
     V(IS_LOAD, 1);
     printf("Ladder is up\n");
@@ -124,12 +134,14 @@ int Capitan( int num_of_chill )
     printf("Ladder is down\n");
     P(IS_UNLOAD, 1);
 
-    Z(BOAT);
+    Z(BOAT_OUT);
     printf("Boat is unload\n");
-    V(BOAT, min_boat_pass);
+    V(BOAT_OUT, min_boat_pass);
     V(IS_UNLOAD, 1);
+    printf("Next cycle\n");
   }
-
+  P(IS_JRN, 1);
+  printf("Capitan is out of bay\n");
   return 0;
 }
 
@@ -137,6 +149,9 @@ int Pass( int i_pass )
 {
   // Waiting
   Z(IS_LOAD);
+
+  P(BOAT_IN, 1);
+  printf("Pass #%d buy ticket to boat\n", i_pass);
 
   // step on ladder
   P(IN, 1);
@@ -147,7 +162,6 @@ int Pass( int i_pass )
   V(IN, 1);
 
   // step on boat
-  P(BOAT, 1);
   printf("Pass #%d is on the boat\n", i_pass);
 
   //printf("Pass #%d chilling\n", i_pass);
@@ -163,9 +177,20 @@ int Pass( int i_pass )
   // step out from boat
   printf("Pass #%d step out from a ladder (exit)\n", i_pass);
   V(OUT, 1);
-  P(BOAT, 1);
+  printf("Pass #%d throw his ticket out\n", i_pass);
+  P(BOAT_OUT, 1);
 
   return 1;
+}
+
+int Pass_cycle( int i_pass )
+{
+  int cnt = 0;
+  while (1)
+    cnt += Pass(i_pass);
+
+
+  return cnt;
 }
 
 int main( int argc, char *argv[] )
@@ -186,7 +211,7 @@ int main( int argc, char *argv[] )
   setvbuf(stdout, buffer, _IOLBF, BUFFER_SIZE);
   //key_t sem_key = ftok(I, 0);
 
-  sem_id = semget(IPC_PRIVATE, 5, MAX_ACCESS);
+  sem_id = semget(IPC_PRIVATE, 7, MAX_ACCESS);
 
   pid_t cap_pid = fork();
 
@@ -208,7 +233,7 @@ int main( int argc, char *argv[] )
     if (pas_pid == 0)
     {
       // pass process
-      Pass(i);
+      Pass_cycle(i);
       return 0;
     }
   }
