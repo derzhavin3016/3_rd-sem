@@ -50,3 +50,5 @@ My homework from 3-rd semester in MIPT.
   All interaction organized by messages ```SCv5```.
 
 ## lsn7
+
+* ```chill.c``` - demonstration program, which simulates a ship & passengers models. Creates a capitan and ```n``` passengers (from cmd args).
