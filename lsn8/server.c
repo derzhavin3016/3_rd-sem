@@ -18,14 +18,18 @@ int ProcStr( char *buf )
 
 void Work( void )
 {
+  // SEC = MEM, FST = CHAN
+  V(CHAN, 1);
+  //V(MEM, 1);
   while (1)
   {
-    Z(NFREE);
-    P(FREE, 1);
-    ProcStr(buffer);
+    // grab memory
+    Z(MEM);
+    V(MEM, 1);
+    //printf("Memory grabbed\n");
+    //ProcStr(buffer);
     printf("%s", buffer);
-    V(FREE, 1);
-    V(NFREE, 1);
+    V(CHAN, 1);
   }
 }
 
@@ -40,7 +44,6 @@ int main( void )
   setvbuf(stdout, buf, _IOLBF, BUFFER_SIZE);
 
   // initialize flag
-  V(FREE, 1);
 
 
   Work();

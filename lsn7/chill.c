@@ -63,22 +63,32 @@ enum Semaphores
   WT
 };
 
-int P( enum Semaphores sem_num, int n )
+int P_FLG( enum Semaphores sem_num, int n, short flags )
 {
   assert(n > 0);
 
-  struct sembuf sem[] = {{sem_num, -n, 0}};
+  struct sembuf sem[] = {{sem_num, -n, flags}};
+
+  return semop(sem_id, sem, 1);
+}
+
+int P( enum Semaphores sem_num, int n )
+{
+  return P_FLG(sem_num, n, 0);
+}
+
+int V_FLG( enum Semaphores sem_num, int n, short flags )
+{
+  assert(n > 0);
+
+  struct sembuf sem[] = {{sem_num, n, flags}};
 
   return semop(sem_id, sem, 1);
 }
 
 int V( enum Semaphores sem_num, int n )
 {
-  assert(n > 0);
-
-  struct sembuf sem[] = {{sem_num, n, 0}};
-
-  return semop(sem_id, sem, 1);
+  return V_FLG(sem_num, n, 0);
 }
 
 int Z_FLG( enum Semaphores sem_num, short flags )
@@ -256,11 +266,10 @@ int main( int argc, char *argv[] )
     if (pas_pid == 0)
     {
       // pass process
-      Pass_cycle(i);
+      printf("!!!! Pass #%d chills %d times\n", i, Pass_cycle(i));
       return 0;
     }
   }
-
 
   for (int i = 0; i < n_pass + 1; ++i)
     if (wait(NULL) < 0)

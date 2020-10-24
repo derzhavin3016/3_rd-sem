@@ -8,18 +8,23 @@ int PrintFile( FILE *fin )
 {
   while (1)
   {
-    char buffer[BUFFER_SIZE];
+    //if (fgets(buffer, BUFFER_SIZE, fin) == NULL)
+      //break;
 
-    if (fgets(buffer, BUFFER_SIZE, fin) == NULL)
-      break;
-
-    // wait for free shared memory
-    P(FREE, 1);
+    // grab channel
+    P(CHAN, 1);
     // writing to shared memory
-    strcpy(shm_buf, buffer);
+    if (fgets(shm_buf, BUFFER_SIZE, fin) == NULL)
+    {
+      V(CHAN, 1);
+      break;
+    }
+    P(MEM, 1);
+    // release memory
+
+    //printf("Mem released.\n");
+    //printf("Channel released.\n");
     //printf("%s", buffer);
-    V(FREE, 1);
-    P(NFREE, 1);
   }
 
   return 1;

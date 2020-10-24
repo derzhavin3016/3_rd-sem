@@ -6,12 +6,15 @@
 #define INC_3_RD_SEM_UTILS_H
 
 #include <stdio.h>
+#include <string.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -20,7 +23,7 @@
 
 
 #define BUFFER_SIZE 4096
-#define MAX_ACCESS 0700
+#define MAX_ACCESS 0777
 
 __inline int MyErr( char *str_err ) __attribute__((always_inline));
 
@@ -31,6 +34,15 @@ int MyErr( char *str_err )
 }
 
 extern int sem_id;
+
+const char SERV_NAME[] = "server.c";
+const int SERV_ID = 0;
+
+enum Semaphores
+{
+  MEM, CHAN
+};
+
 
 int P_FLG( int sem_num, int n, short flags )
 {
