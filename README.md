@@ -54,3 +54,11 @@ My homework from 3-rd semester in MIPT.
 * ```chill.c``` - demonstration program, which simulates a ship & passengers models. Creates a capitan and ```n``` passengers (from cmd args).
 
 ## lsn8
+
+* ```client.c``` and ```server.c``` - demonstartion program, which simulates an interaction between client and server:
+  * Client work similary to ```cat``` utility he get lines from **stdin** or from file(s) and then write it to **shared memory** line by line.
+  * Server waits while any client writes to **shared memory** and then print line in shared memory to **stdout**.
+  An interacction organized by  semaphores in critical section. There are two binary semaphores, actually:
+  * MEM - semaphore which shows state of memory - 1 memory has changed, 0 memory has not changed.
+  * CHAN - semaphores which shows state of communication channel between client and server, 1 - channel is free, 0 - channel is not free.
+
