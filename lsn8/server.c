@@ -24,12 +24,12 @@ void Work( void )
   while (1)
   {
     // grab memory
-    Z(MEM);
-    V(MEM, 1);
+    P(MEM, 1);
     //printf("Memory grabbed\n");
     //ProcStr(buffer);
     printf("%s", buffer);
     V(CHAN, 1);
+    Z(CHAN);
   }
 }
 

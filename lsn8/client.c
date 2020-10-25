@@ -19,12 +19,9 @@ int PrintFile( FILE *fin )
       V(CHAN, 1);
       break;
     }
-    P(MEM, 1);
     // release memory
-
-    //printf("Mem released.\n");
-    //printf("Channel released.\n");
-    //printf("%s", buffer);
+    V(MEM, 1);
+    Z(MEM);
   }
 
   return 1;
