@@ -64,5 +64,14 @@ My homework from 3-rd semester in MIPT.
 
 ## lsn9
 
-* ```thr.c``` - working with threads pro
+* ```thr.c``` - working with threads program, which increment a variable up to ```n``` value by using  ```m``` **posix threads**. It has 4 implementations:
+  1. Native - every thread from ```m``` threads increments variable ```n / m``` times. It works really bad - every time a different value as a result.
+  2. Critical section for increment - every time a right value, but works too slow.
+  3. Critical section for incremention cycle - also slow(
+  4. Every thread has its own local variable to increment, and then he just add it to global varibale using critical section - works rather faster than 1 algorithm!!!
+  
+**Program usage**:
+```bash
+./th [expected value] [number of threads] [number of algorithm(described upper)]
+``` 
 
