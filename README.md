@@ -62,3 +62,5 @@ My homework from 3-rd semester in MIPT.
   * MEM - semaphore which shows state of memory - 1 memory has changed, 0 memory has not changed.
   * CHAN - semaphores which shows state of communication channel between client and server, 1 - channel is free, 0 - channel is not free.
 
+## lsn9
+
