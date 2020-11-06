@@ -18,25 +18,19 @@ typedef void *(*routine)(void *);
 
 void *native_routine( void *param )
 {
-  int n_threads =  *(int *)param,
-      exp_val = *((int *)param + 1);
+  int cnt =  *(int *)param;
 
-  for (int i = 0; i < exp_val / n_threads; ++i)
+  for (int i = 0; i < cnt; ++i)
     ++count;
-
-  long long a = 0;
-  for (int j = 0; j < 1000000; ++j)
-    ++a;
 
   return 0;
 }
 
 void *crit_inc( void *param )
 {
-  int n_threads =  *(int *)param,
-      exp_val = *((int *)param + 1);
+  int cnt =  *(int *)param;
 
-  for (int i = 0; i < exp_val / n_threads; ++i)
+  for (int i = 0; i < cnt; ++i)
   {
     pthread_mutex_lock(&pmut);
     ++count;
@@ -48,13 +42,27 @@ void *crit_inc( void *param )
 
 void *crit_cycle( void *param )
 {
-  int n_threads =  *(int *)param,
-    exp_val = *((int *)param + 1);
+  int cnt =  *(int *)param;
 
   pthread_mutex_lock(&pmut);
-  for (int i = 0; i < exp_val / n_threads; ++i)
+  for (int i = 0; i < cnt; ++i)
     ++count;
 
+  pthread_mutex_unlock(&pmut);
+
+  return 0;
+}
+
+void *cool_algos( void *param )
+{
+  int cnt =  *(int *)param;
+  int loc_count = 0;
+
+  for (int i = 0; i < cnt; ++i)
+    ++loc_count;
+
+  pthread_mutex_lock(&pmut);
+  count += loc_count;
   pthread_mutex_unlock(&pmut);
 
   return 0;
@@ -72,6 +80,9 @@ void swtch_rt( routine *rt, int alg_num )
     break;
   case 3:
     *rt = crit_cycle;
+    break;
+  case 4:
+    *rt = cool_algos;
     break;
   default:
     printf("Ты чево наделал....\n");
@@ -92,7 +103,7 @@ int main( int argc, char *argv[] )
       exp_val   = atoi(argv[1]),
       alg_num   = atoi(argv[3]);
 
-  int argv_rout[2] = {n_threads, exp_val};
+  int param = exp_val / n_threads;
 
   // allocating memory for threads ids
   pthread_t tids[n_threads];
@@ -101,8 +112,12 @@ int main( int argc, char *argv[] )
 
   pthread_mutex_unlock(&pmut);
 
-  for (int i = 0; i < n_threads; ++i)
-    pthread_create(tids + i, NULL, rt, argv_rout);
+  int param0 = param + exp_val % n_threads;
+  pthread_create(tids, NULL, rt, &param0);
+
+  for (int i = 1; i < n_threads; ++i)
+    pthread_create(tids + i, NULL, rt, &param);
+
 
   for (int i = 0; i < n_threads; ++i)
     pthread_join(tids[i], NULL);

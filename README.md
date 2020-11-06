@@ -64,3 +64,5 @@ My homework from 3-rd semester in MIPT.
 
 ## lsn9
 
+* ```thr.c``` - working with threads pro
+

@@ -3,6 +3,6 @@
 for (( i = 1; i <= 16; i++))
 do
   echo
-  echo num =  $i
-  time ./th 100000 $i 1
+  echo num = $i
+  time ./th $1 $i 4
 done
