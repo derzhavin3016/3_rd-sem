@@ -1,0 +1,2 @@
+#!/bin/bash
+ipcrm -S 0x0009fd2e -M 0x0009fd2e
