@@ -68,34 +68,22 @@ void *cool_algos( void *param )
   return 0;
 }
 
-void swtch_rt( routine *rt, int alg_num )
+const routine funcs[] = 
 {
-  switch (alg_num)
-  {
-  case 1:
-    *rt = native_routine;
-    break;
-  case 2:
-    *rt = crit_inc;
-    break;
-  case 3:
-    *rt = crit_cycle;
-    break;
-  case 4:
-    *rt = cool_algos;
-    break;
-  default:
-    printf("Ты чево наделал....\n");
-    exit(1);
-  }
-}
+  native_routine,
+  crit_inc,
+  crit_cycle,
+  cool_algos
+};
+
+size_t funcs_size = 4;
 
 int main( int argc, char *argv[] )
 {
   if (argc < 4)
   {
     printf("USAGE: ./th [expexted_value] [num_of_threads] [algorithm_num]\n");
-    printf("algorithm_num = 1(native), 2(crit section in increment), 3(crit sec in cycle)\n");
+    printf("algorithm_num = 1(native), 2(crit section in increment), 3(crit sec in cycle), 4(cool algorithm)\n");
     return 1;
   }
 
@@ -103,20 +91,24 @@ int main( int argc, char *argv[] )
       exp_val   = atoi(argv[1]),
       alg_num   = atoi(argv[3]);
 
+  if (alg_num > (int)funcs_size)
+  {
+    printf("Unrecognized algorithm number: %d\n", alg_num);
+    return 1;
+  }
+
   int param = exp_val / n_threads;
 
   // allocating memory for threads ids
   pthread_t tids[n_threads];
-  routine rt = native_routine;
-  swtch_rt(&rt, alg_num);
 
   pthread_mutex_unlock(&pmut);
 
   int param0 = param + exp_val % n_threads;
-  pthread_create(tids, NULL, rt, &param0);
+  pthread_create(tids, NULL, funcs[alg_num - 1], &param0);
 
   for (int i = 1; i < n_threads; ++i)
-    pthread_create(tids + i, NULL, rt, &param);
+    pthread_create(tids + i, NULL, funcs[alg_num - 1], &param);
 
 
   for (int i = 0; i < n_threads; ++i)
