@@ -70,7 +70,8 @@ My homework from 3-rd semester in MIPT.
   3. Critical section for incremention cycle - also slow(
   4. Every thread has its own local variable to increment, and then he just add it to global varibale using critical section - works rather faster than 1 algorithm!!!
 
-**Note**
+**Note**:
+
 Compile with ```-pthread``` key (described in Makefile)
   
 **Program usage**:
