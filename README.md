@@ -72,6 +72,6 @@ My homework from 3-rd semester in MIPT.
   
 **Program usage**:
 ```bash
-./th [expected value] [number of threads] [number of algorithm(described upper)]
+./th expected_value] number_of_threads number_of_algorithm(have described upper)
 ``` 
 
