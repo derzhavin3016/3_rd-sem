@@ -69,9 +69,12 @@ My homework from 3-rd semester in MIPT.
   2. Critical section for increment - every time a right value, but works too slow.
   3. Critical section for incremention cycle - also slow(
   4. Every thread has its own local variable to increment, and then he just add it to global varibale using critical section - works rather faster than 1 algorithm!!!
+
+**Note**
+Compile with ```-pthread``` key (described in Makefile)
   
 **Program usage**:
 ```bash
-./th expected_value] number_of_threads number_of_algorithm(have described upper)
+./th expected_value number_of_threads number_of_algorithm(described upper)
 ``` 
 
