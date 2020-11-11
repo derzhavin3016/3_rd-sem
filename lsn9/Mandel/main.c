@@ -10,8 +10,10 @@ typedef unsigned char BYTE;
 
 #define FRAME_W  800
 #define FRAME_H  800
+#define WND_H 800
+#define WND_W 800
 
-double ZoomX = 800 / FRAME_W, ZoomY = 800 / FRAME_H;
+double ZoomX = (double)WND_W / FRAME_W, ZoomY = (double)WND_H / FRAME_H;
 
 BYTE Frame[FRAME_H][FRAME_W][3];
 
@@ -28,23 +30,26 @@ void FrameInit( BYTE r, BYTE g, BYTE b )
 
 void Mandel( int x, int y )
 {
+  double newx = ((double)x / FRAME_W - 0.5) * 4;
+  double newy = ((double)y / FRAME_H - 0.5) * 4;
+
   double complex Z0 = 0 + I * 0;
-  double complex c = (double)x + I * (double)y;
+  double complex c = (double)newx + I * (double)newy;
   double complex Znext;
 
-  for (int i = 0; i < 255; ++i)
+  for (int i = 0; i < 125; ++i)
   {
     Znext = (Z0 * Z0) + c;
-    if (len2(Znext) > 400)
+    if (len2(Znext) > 4)
       return;
     Z0 = Znext;
   }
-  PutPixel(x + 80, y, 0, 0, 0);
+  PutPixel(x, y, 0, 0, 0);
 }
 
 void DrawLine( int line )
 {
-  for (int i = -FRAME_H / 2; i < FRAME_H / 2; ++i)
+  for (int i = 0; i < FRAME_H; ++i)
     Mandel(line, i);
 }
 
@@ -52,7 +57,7 @@ void Draw( void )
 {
   FrameInit(0.3 * 255, 0.5 * 255, 0.7 * 255);
 
-  for (int i = -FRAME_W / 2; i < FRAME_W / 2; ++i)
+  for (int i = 0; i < FRAME_W; ++i)
     DrawLine(i);
 }
 
@@ -93,8 +98,8 @@ void onKeyboard( BYTE key, int x, int y )
 
 void onResize( int newW, int newH )
 {
-  //ZoomX = (double)newW / 800;
-  //ZoomY = (double)newH / 800;
+  //ZoomX = 1 / ((double)newW / WND_W);
+  //ZoomY = 1 / ((double)newH / WND_H);
 
   glViewport(0, 0, newW, newH);
   glMatrixMode(GL_PROJECTION);
@@ -106,7 +111,7 @@ void onResize( int newW, int newH )
 int main( int argc, char *argv[] )
 {
   glutInit(&argc, argv);
-  glutInitWindowSize(800, 800);
+  glutInitWindowSize(WND_W, WND_H);
   glutInitWindowPosition(0, 0);
 
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
