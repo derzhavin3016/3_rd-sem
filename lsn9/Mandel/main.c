@@ -3,8 +3,9 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <complex.h>
-
-#pragma STDC CX_LIMITED_RANGE on
+#include <pthread.h>
+#include <math.h>
+#include <time.h>
 
 typedef unsigned char BYTE;
 
@@ -16,6 +17,11 @@ typedef unsigned char BYTE;
 double ZoomX = (double)WND_W / FRAME_W, ZoomY = (double)WND_H / FRAME_H;
 
 BYTE Frame[FRAME_H][FRAME_W][3];
+
+BYTE Clamp( BYTE val, BYTE min, BYTE max )
+{
+  return val < min ? min : val > max ? max : val;
+}
 
 void PutPixel( int x, int y, BYTE r, BYTE g, BYTE b );
 
@@ -37,11 +43,16 @@ void Mandel( int x, int y )
   double complex c = (double)newx + I * (double)newy;
   double complex Znext;
 
-  for (int i = 0; i < 125; ++i)
+  for (int i = 0; i < 255; ++i)
   {
     Znext = (Z0 * Z0) + c;
     if (len2(Znext) > 4)
+    {
+      srand(clock());
+      double mulr = sin(i), mulg = cos(i), mulb = sinh(i);
+      PutPixel(x, y, (255 - i) * mulr, (255 - i) * mulg, (255 - i) * mulb);
       return;
+    }
     Z0 = Znext;
   }
   PutPixel(x, y, 0, 0, 0);
@@ -67,11 +78,10 @@ void PutPixel( int x, int y, BYTE r, BYTE g, BYTE b )
   if (y > FRAME_H || x > FRAME_W || x < 0 || y < 0)
     return;
 
-  Frame[y][x][0] = b;
-  Frame[y][x][1] = g;
-  Frame[y][x][2] = r;
+  Frame[y][x][0] = Clamp(b, 0, 255);
+  Frame[y][x][1] = Clamp(g, 0, 255);
+  Frame[y][x][2] = Clamp(r, 0, 255);
 }
-
 
 
 void onDisplay( void )
@@ -80,13 +90,11 @@ void onDisplay( void )
   glClear(GL_COLOR_BUFFER_BIT);
 
   glRasterPos2d(-1, 1);
-
-  Draw();
   glPixelZoom(ZoomX, -ZoomY);
   glDrawPixels(FRAME_W, FRAME_H, GL_BGR_EXT, GL_UNSIGNED_BYTE, Frame);
 
   glFinish();
-  glutPostRedisplay();
+  //glutPostRedisplay();
   glutSwapBuffers();
 }
 
@@ -115,7 +123,7 @@ int main( int argc, char *argv[] )
   glutInitWindowPosition(0, 0);
 
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-
+  Draw();
 
 
   glutCreateWindow("HUI");
