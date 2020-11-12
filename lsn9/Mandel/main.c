@@ -3,20 +3,16 @@
 
 int main( int argc, char *argv[] )
 {
-  glutInit(&argc, argv);
-  glutInitWindowSize(WND_W, WND_H);
-  glutInitWindowPosition(0, 0);
+  if (argc != 2)
+  {
+    printf("USAGE: ./mand [is_thread]\n0 - no threads, 1 - threads\n");
+    return 1;
+  }
 
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-  Draw(0);
+  // Calculate mandel
+  Draw(atoi(argv[1]));
 
-
-  glutCreateWindow("HUI");
-  glutKeyboardFunc(onKeyboard);
-  glutDisplayFunc(onDisplay);
-  glutReshapeFunc(onResize);
-
-  glutMainLoop();
+  GlutWork(argc, argv);
 
   return 0;
 }

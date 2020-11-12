@@ -19,4 +19,6 @@ void onKeyboard( BYTE key, int x, int y );
 
 void onResize( int newW, int newH );
 
+void GlutWork( int argc, char *argv[] );
+
 #endif //INC_3_RD_SEM_GUI_FUNCS_H

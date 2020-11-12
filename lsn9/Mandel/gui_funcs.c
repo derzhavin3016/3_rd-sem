@@ -2,6 +2,24 @@
 
 double ZoomX = (double)WND_W / FRAME_W, ZoomY = (double)WND_H / FRAME_H;
 
+void GlutWork( int argc, char *argv[] )
+{
+  glutInit(&argc, argv);
+  glutInitWindowSize(WND_W, WND_H);
+  glutInitWindowPosition(0, 0);
+
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+
+
+  glutCreateWindow("Mandel");
+  glutKeyboardFunc(onKeyboard);
+  glutDisplayFunc(onDisplay);
+  glutReshapeFunc(onResize);
+
+  glutMainLoop();
+}
+
+
 void onDisplay( void )
 {
   glClearColor(0.3, 0.5, 0.7, 1);

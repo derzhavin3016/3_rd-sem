@@ -5,6 +5,7 @@
 #include <complex.h>
 #include <pthread.h>
 #include <math.h>
+#include <stdlib.h>
 #include <time.h>
 
 typedef unsigned char BYTE;

@@ -27,8 +27,8 @@ void Mandel( int x, int y )
     Znext = (Z0 * Z0) + c;
     if (len2(Znext) > 4)
     {
-      srand(clock());
       double mulr = i * sin(i), mulg = cos(i) / (i + 1), mulb = cosh(i);
+      
       PutPixel(x, y, (255 - i) * mulr, (255 - i) * mulg, (255 - i) * mulb);
       return;
     }
