@@ -9,6 +9,7 @@
 #include <string.h>
 #include <time.h>
 
+typedef struct timespec timespc;
 typedef unsigned char BYTE;
 
 #define FRAME_W  800
@@ -17,21 +18,19 @@ typedef unsigned char BYTE;
 #define WND_W 800
 
 
-extern BYTE Frame[FRAME_H * FRAME_W * 3];
+extern BYTE Frame[FRAME_H][FRAME_W][3];
 
 BYTE Clamp( BYTE val, BYTE min, BYTE max );
 
 void FrameInit( BYTE r, BYTE g, BYTE b );
 
-void Mandel( int x, int y, BYTE *frame );
+void Mandel( int x, int y );
 
-void DrawLine( int line );
+void PutPixel( int x, int y, BYTE r, BYTE g, BYTE b );
 
-void PutPixel( int x, int y, BYTE r, BYTE g, BYTE b, BYTE *frame );
+void Draw( int n_threads );
 
-void Draw( int is_thr, int n_threads );
-
-void DrawSingle( void );
+void DrawMand( int start, int end );
 
 void *DrawThread( void *params );
 
