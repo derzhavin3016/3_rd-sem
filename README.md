@@ -79,3 +79,5 @@ Compile with ```-pthread``` key (described in Makefile)
 ./th expected_value number_of_threads number_of_algorithm(described upper)
 ``` 
 
+## lsnA
+
