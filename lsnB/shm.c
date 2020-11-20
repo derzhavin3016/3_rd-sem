@@ -29,9 +29,8 @@ int MyErr( char *str_err )
 int ReadFileMq( int fd, char *ptr, size_t size )
 {
   size_t bytes_read = 0;
+  int sz = size;
 
-  return read(fd, ptr, size);
-/*
   while (sz > 0)
   {
     bytes_read = read(fd, ptr, sz);
@@ -43,7 +42,7 @@ int ReadFileMq( int fd, char *ptr, size_t size )
     ptr += bytes_read;
     sz -= bytes_read;
   }
-  return 0;*/
+  return 0;
 }
 
 int WriteFileMq( int fd, char *ptr, size_t size )
@@ -70,53 +69,37 @@ int GetFlength( int fd )
   return fstat(fd, &buf) == -1 ? -1 : buf.st_size;
 }
 
-enum
+int Reader( int fin )
 {
-  TO_READER = 1,
-  TO_WRITER = 2
-};
-
-
-int Reader( char *file_in )
-{
-  int fin = open(file_in, O_RDONLY, MAX_ACCESS);
-  CHECK_DF(fin, file_in)
-
   int length = GetFlength(fin);
-  CHECK_DF(length, file_in)
+  CHECK_DF(length, "length err")
 
   int shm_id = shm_open(QUEUE_NAME, O_RDWR, S_IRUSR | S_IWUSR);
-  CHECK_DF(shm_id, "Reader")
+  CHECK_DF(shm_id, "Reader shared mem error")
 
   CHECK_DF(ftruncate(shm_id, length), "Truncate err")
 
-  char *ptr = mmap(NULL, length * sizeof(char), PROT_WRITE | PROT_READ,
-                   MAP_SHARED, shm_id, 0);
+  char *ptr = mmap(NULL, length, PROT_WRITE | PROT_READ, MAP_SHARED, shm_id, 0);
   CHECK(ptr != MAP_FAILED, "Map failed")
 
   mqd_t mqd = mq_open(QUEUE_NAME, O_RDWR);
   CHECK_DF(mqd, "Queue get err")
 
-  char pptr[length];
-  CHECK_DF(ReadFileMq(fin, ptr, length), "FNC ERR")
+  CHECK_DF(ReadFileMq(fin, ptr, length), "Read error")
 
   char msg_bf[BUFFER_SIZE];
 
   CHECK_DF(munmap(ptr, length), QUEUE_NAME)
 
-  CHECK_DF(mq_send(mqd, msg_bf, BUFFER_SIZE, TO_WRITER), "Reader msg sending error")
-  unsigned prior = TO_READER;
+  CHECK_DF(mq_send(mqd, msg_bf, BUFFER_SIZE, 0), "Reader msg sending error")
 
-  CHECK_DF(close(fin), file_in)
+  CHECK_DF(close(fin), "close failed")
   CHECK_DF(close(shm_id), QUEUE_NAME)
   return 0;
 }
 
-int Writer( char *file_out )
+int Writer( int fout )
 {
-  int fout = open(file_out, O_CREAT | O_WRONLY, MAX_ACCESS);
-  CHECK_DF(fout, file_out)
-
   mqd_t mqd = mq_open(QUEUE_NAME, O_RDWR);
   CHECK_DF(mqd, "Queue get err")
 
@@ -124,12 +107,10 @@ int Writer( char *file_out )
   CHECK_DF(shm_id, "Writer")
 
   int length = GetFlength(shm_id);
-  CHECK_DF(length, file_out)
+  CHECK_DF(length, "length error")
 
   char msg_bf[BUFFER_SIZE];
-
-  unsigned prior = TO_WRITER;
-  CHECK_DF(mq_receive(mqd, msg_bf, BUFFER_SIZE, &prior), "Writer msg recieving error")
+  CHECK_DF(mq_receive(mqd, msg_bf, BUFFER_SIZE, NULL), "Writer msg recieving error")
 
   char *ptr = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, shm_id, 0);
   CHECK(ptr != MAP_FAILED, "Map failed in writer")
@@ -138,7 +119,44 @@ int Writer( char *file_out )
 
   CHECK_DF(close(shm_id), QUEUE_NAME)
   CHECK_DF(munmap(ptr, length), QUEUE_NAME)
-  CHECK_DF(close(fout), file_out)
+  CHECK_DF(close(fout), "close failed")
+  return 0;
+}
+
+int InitObjs( mqd_t *mqd, int *shm_id )
+{
+  struct mq_attr att = {0, 10, BUFFER_SIZE, 0};
+  *mqd = mq_open(QUEUE_NAME, O_CREAT | O_RDWR, MAX_ACCESS, &att);
+  CHECK_DF(*mqd, "Queue")
+  *shm_id = shm_open(QUEUE_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  CHECK_DF(*shm_id, "Shared memory")
+
+  return 0;
+}
+
+
+int CloseObjs( mqd_t mqd, int shm )
+{
+  CHECK_DF(close(shm), "Close shared mem err")
+  CHECK_DF(mq_close(mqd), "Close queue err")
+  CHECK_DF(mq_unlink(QUEUE_NAME), "Unlink error")
+  CHECK_DF(shm_unlink(QUEUE_NAME), "Unlink error")
+
+  return 0;
+}
+
+int Forks( int fin, int fout )
+{
+  pid_t reader_pid = fork();
+  if (reader_pid == 0)
+    exit(Reader(fin));
+
+  pid_t writer_pid = fork();
+  if (writer_pid == 0)
+    exit(Writer(fout));
+
+  for (int i = 0; i < 2; ++i)
+    wait(NULL);
   return 0;
 }
 
@@ -149,26 +167,17 @@ int main( int argc, char *argv[] )
     printf("USAGE: ./mq INPUT_FILE OUTPUT_FILE\n");
     return 0;
   }
-  struct mq_attr att = {0, 10, BUFFER_SIZE, 0};
-  mqd_t mqd_id = mq_open(QUEUE_NAME, O_CREAT | O_RDWR, MAX_ACCESS, &att);
-  CHECK_DF(mqd_id, "Queue")
-  int shm_id = shm_open(QUEUE_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-  CHECK_DF(shm_id, "Shared memory")
+  mqd_t mqd_id = 0;
+  int shm_id = 0;
+  CHECK(InitObjs(&mqd_id, &shm_id) == 0, "Init failed: ");
 
-  pid_t reader_pid = fork();
-  if (reader_pid == 0)
-    return Reader(argv[1]);
+  int fin = open(argv[1], O_RDONLY, MAX_ACCESS);
+  CHECK_DF(fin, argv[1])
+  int fout = open(argv[2], O_CREAT | O_WRONLY, MAX_ACCESS);
+  CHECK_DF(fout, argv[2])
 
-  pid_t writer_pid = fork();
-  if (writer_pid == 0)
-    return Writer(argv[2]);
+  Forks(fin, fout);
 
-  for (int i = 0; i < 2; ++i)
-    wait(NULL);
-
-  CHECK_DF(close(shm_id), "Close shared mem err")
-  CHECK_DF(mq_close(mqd_id), "Close queue err")
-  CHECK_DF(mq_unlink(QUEUE_NAME), "Unlink error")
-  CHECK_DF(shm_unlink(QUEUE_NAME), "Unlink error")
+  CHECK(CloseObjs(mqd_id, shm_id) == 0, "Close failed: ");
   return 0;
 }
