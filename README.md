@@ -70,14 +70,28 @@ My homework from 3-rd semester in MIPT.
   3. Critical section for incremention cycle - also slow(
   4. Every thread has its own local variable to increment, and then he just add it to global varibale using critical section - works rather faster than 1 algorithm!!!
 
-**Note**:
-
-Compile with ```-pthread``` key (described in Makefile)
+  **Note**: Compile with ```-pthread``` key (described in Makefile)
   
-**Program usage**:
-```bash
-./th expected_value number_of_threads number_of_algorithm(described upper)
-``` 
+  **Program usage**:
+  ```bash
+  ./th expected_value number_of_threads number_of_algorithm(described upper)
+  ``` 
 
 ## lsnA
+## lsnB
 
+* ```shm.c``` - demo program which creates two processes - a client and a server, the communication organized with **POSIX**:
+  * ***shared memory*** - for sending data.
+  * ***message queue*** - for synhronization.
+  
+  **Usage**:
+  ```bash
+  ./shm INPUT_FILE OUTPUT_FILE
+  ```
+  Client reads from **INPUT_FILE** and write the data to shared memory,
+  then Server reads data from shared memory and put it to **OUTPUT_FILE**.
+  For convenience, the shared memory file mapped into virtual mempry by using ```mmap()```
+  function.
+  
+  **Note**:
+  Link with ```-lrt``` key (described in _CMakeLists.txt_)
