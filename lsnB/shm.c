@@ -164,7 +164,7 @@ int main( int argc, char *argv[] )
 {
   if (argc != 3)
   {
-    printf("USAGE: ./mq INPUT_FILE OUTPUT_FILE\n");
+    printf("USAGE: %s INPUT_FILE OUTPUT_FILE\n", argv[0]);
     return 0;
   }
   mqd_t mqd_id = 0;
