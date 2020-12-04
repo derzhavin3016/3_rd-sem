@@ -130,6 +130,15 @@ int main( int argc, char *argv[] )
     }
   } 
   
+  // Here parent resell data between pipes
+  for (int i = 0; i < forsk_num; ++i)
+  {
+    struct epoll_event ev;      
+    int n = epoll_wait(epoll_fd, &ev, forks_num, -1);
+    ReadWriteFile(pipe_fds[i][][], )  
+  }
+  
+  
 
   for (int i = 0; i < forks_num; ++i)
   {
