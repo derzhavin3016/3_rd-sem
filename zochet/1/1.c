@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 //#include <sys/stat.h>
+
 #include <fcntl.h>
+#include <poll.h>
 
 #include <errno.h>
 #include <ctype.h>
@@ -86,7 +88,6 @@ int WordCount( int fd_in, WC *w_cnt )
     return -1;
   ssize_t bytes_read = 0;
   w_cnt->bytes = w_cnt->strings = w_cnt->words = 0;
-  int isword = 0;
 
   do
   {
@@ -97,14 +98,14 @@ int WordCount( int fd_in, WC *w_cnt )
     if (bytes_read < 0)
     {
       if (errno == EAGAIN || errno == EWOULDBLOCK)
-        continue;
+        break;
       return MyErr("Error with reading file");
     }
 
     w_cnt->bytes   += bytes_read;
     //w_cnt->strings += StrCnt(buffer, bytes_read);
     //w_cnt->words   += WrdCnt(buffer, bytes_read, &isword);
-  } while (bytes_read != 0);
+  } while (0 && bytes_read != 0);
 
   return 0;
 }
@@ -139,35 +140,48 @@ int main( int argc, char *argv[] )
     CHECK_DF(close(pip_serr[0]), "Error closing out pipe");
     CHECK_DF(dup2(pip_serr[1], STDERR_FILENO), "duplicating error stderr");
 
-    char buf[BUFFER_SIZE];
-
-    setvbuf(stderr, NULL, _IONBF, BUFFER_SIZE / 2);
-
     CHECK_DF(execvp(argv[1], argv + 1), "Execution error");
 
     exit(0);
   }
 
-  // Here goes a parent
+  WC wc[2] = {{.bytes = 0}, {.bytes = 0}}; //0 - out, 1 -err
+  struct pollfd fds[] = {
+    {.fd = pip_sout[0], .events = POLLIN | POLLERR | POLLNVAL},
+    {.fd = pip_serr[0], .events = POLLIN | POLLERR | POLLNVAL},
+  };
+
+  do
+  {
+    int nfds = poll(fds, 2, 200);
+    if (nfds < 0)
+      return 0;
+    if (nfds == 0)
+      break;
+
+    for (int i = 0; i < 2; ++i)
+    {
+      if (!(fds[i].events & POLLIN))
+        continue;
+
+      WC tmp = {.bytes = 0};
+      CHECK_DF(WordCount(fds[i].fd, &tmp), "Word count from stdout");
+      wc[i].bytes += tmp.bytes;
+    }
+  } while(1);
+  CHECK_DF(close(pip_sout[0]), "Error closing stdout read pipe");
+  CHECK_DF(close(pip_serr[0]), "Error closing stderr read pipe");
   CHECK_DF(close(pip_sout[1]), "Error closing stdout write pipe");
   CHECK_DF(close(pip_serr[1]), "Error closing stderr write pipe");
 
-  WC w_err = {0}, w_out = {0};
-  printf("I am waiting for wc \n");
-  CHECK_DF(WordCount(pip_sout[0], &w_out), "Word count from stdout");
-  CHECK_DF(WordCount(pip_serr[0], &w_err), "Word count from stderr");
 
-  CHECK_DF(close(pip_sout[0]), "Error closing stdout read pipe");
-  CHECK_DF(close(pip_serr[0]), "Error closing stderr read pipe");
-
+  printf("STDOUT bytes: %zd\n", wc[0].bytes);
+  printf("STDERR bytes: %zd\n", wc[1].bytes);
   printf("I am waiting \n");
 
   CHECK_DF(wait(NULL), "Error waiting for process");
 
   printf("I am no wating \n");
-  printf("STDOUT bytes: %zd\n", w_out.bytes);
-  printf("STDERR bytes: %zd\n", w_err.bytes);
-
 
   return 0;
 }
