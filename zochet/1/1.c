@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
+#define __USE_GNU
 #include <unistd.h>
-//#include <sys/types.h>
+#include <sys/types.h>
 //#include <sys/stat.h>
-//#include <fcntl.h>
+#include <fcntl.h>
+
 #include <errno.h>
 #include <ctype.h>
 #include <sys/wait.h>
@@ -35,9 +38,9 @@ int MyErr( char *str_err )
 
 typedef struct TAGwc
 {
-  int strings;
-  int words;
-  int bytes;
+  size_t strings;
+  size_t words;
+  size_t bytes;
 } WC;
 
 int StrCnt( const char *buf, size_t size )
@@ -81,7 +84,7 @@ int WordCount( int fd_in, WC *w_cnt )
 {
   if (w_cnt == NULL)
     return -1;
-  int bytes_read = 0;
+  ssize_t bytes_read = 0;
   w_cnt->bytes = w_cnt->strings = w_cnt->words = 0;
   int isword = 0;
 
@@ -90,13 +93,17 @@ int WordCount( int fd_in, WC *w_cnt )
     char buffer[BUFFER_SIZE];
 
     bytes_read = read(fd_in, buffer, BUFFER_SIZE);
+
     if (bytes_read < 0)
+    {
+      if (errno == EAGAIN || errno == EWOULDBLOCK)
+        continue;
       return MyErr("Error with reading file");
+    }
 
     w_cnt->bytes   += bytes_read;
-    w_cnt->strings += StrCnt(buffer, bytes_read);
-    w_cnt->words   += WrdCnt(buffer, bytes_read, &isword);
-
+    //w_cnt->strings += StrCnt(buffer, bytes_read);
+    //w_cnt->words   += WrdCnt(buffer, bytes_read, &isword);
   } while (bytes_read != 0);
 
   return 0;
@@ -116,8 +123,8 @@ int main( int argc, char *argv[] )
   int pip_sout[2] = {0};
   int pip_serr[2] = {0};
 
-  CHECK_DF(pipe(pip_sout) < 0, "stdout pipe");
-  CHECK_DF(pipe(pip_serr) < 0, "stderr pipe");
+  CHECK_DF(pipe2(pip_sout, O_NONBLOCK) < 0, "stdout pipe");
+  CHECK_DF(pipe2(pip_serr, O_NONBLOCK) < 0, "stderr pipe");
 
   pid_t cpid = fork();
 
@@ -132,9 +139,13 @@ int main( int argc, char *argv[] )
     CHECK_DF(close(pip_serr[0]), "Error closing out pipe");
     CHECK_DF(dup2(pip_serr[1], STDERR_FILENO), "duplicating error stderr");
 
+    char buf[BUFFER_SIZE];
+
+    setvbuf(stderr, NULL, _IONBF, BUFFER_SIZE / 2);
+
     CHECK_DF(execvp(argv[1], argv + 1), "Execution error");
 
-    return 0;
+    exit(0);
   }
 
   // Here goes a parent
@@ -142,16 +153,21 @@ int main( int argc, char *argv[] )
   CHECK_DF(close(pip_serr[1]), "Error closing stderr write pipe");
 
   WC w_err = {0}, w_out = {0};
+  printf("I am waiting for wc \n");
   CHECK_DF(WordCount(pip_sout[0], &w_out), "Word count from stdout");
   CHECK_DF(WordCount(pip_serr[0], &w_err), "Word count from stderr");
 
   CHECK_DF(close(pip_sout[0]), "Error closing stdout read pipe");
   CHECK_DF(close(pip_serr[0]), "Error closing stderr read pipe");
 
+  printf("I am waiting \n");
+
   CHECK_DF(wait(NULL), "Error waiting for process");
 
-  printf("STDOUT bytes: %d\n", w_out.bytes);
-  printf("STDERR bytes: %d\n", w_err.bytes);
+  printf("I am no wating \n");
+  printf("STDOUT bytes: %zd\n", w_out.bytes);
+  printf("STDERR bytes: %zd\n", w_err.bytes);
+
 
   return 0;
 }
