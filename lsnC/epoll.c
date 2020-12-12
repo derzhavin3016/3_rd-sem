@@ -123,6 +123,9 @@ int ChildWork( const PPair *p_pair, int num )
   CHECK_DF(bytes_read, "reading error");
   printf("Ch%d: Read %ld bytes from %d\n", num, bytes_read, fd_in);
 
+  if (bytes_read == 0)
+    return 0;
+
   // write to pipe
   CHECK_DF(MyWrite(fd_out, buf, (size_t)bytes_read), "writing error");
 
@@ -132,13 +135,27 @@ int ChildWork( const PPair *p_pair, int num )
 
 
   // Closing all related descriptors (if valid)
-  /*CHECK_DF(close(fd_in), "closing error for fd_in");
+  CHECK_DF(close(fd_in), "closing error for fd_in");
   CHECK_DF(close(fd_out), "closing error for fd_out");
   if (num != 0)
-    CHECK_DF(close(p_pair->to_write[1]), "closing error for write end of to write");*/
-  /*if (num != forks_num - 1)
+    CHECK_DF(close(p_pair->to_write[1]), "closing error for write end of to write");
+  if (num != forks_num - 1)
     CHECK_DF(close(p_pair->to_read[0]), "closing error for read end of to read");
-  */return 0;
+  return 0;
+}
+
+int CloseAll( PPair *p_prs )
+{
+  for (int i = 0; i < forks_num; ++i)
+  {
+    if (i != 0)
+      CHECK_DF(close(p_prs[i].to_write[1]), "closing error");
+    if (i != forks_num - 1)
+      CHECK_DF(close(p_prs[i].to_read[0]), "closing erroro");
+
+    CHECK_DF(close(p_prs[i].to_read[1]), "close to read[1] error");
+    CHECK_DF(close(p_prs[i].to_write[0]), "close to write[0] error");
+  }
 }
 
 int ParentWork( int epoll_fd )
@@ -173,11 +190,6 @@ int ParentWork( int epoll_fd )
         CHECK_DF(MyWrite(fd_out, buf, bytes_read), "Write error");
 
         free(buf);
-
-        CHECK_DF(close(fd_in), "closing error");
-        CHECK_DF(close(fd_out), "closing error");
-        close(p_pair->to_read[1]);
-        close((p_pair + 1)->to_write[0]);
       }
     }
 
@@ -186,10 +198,10 @@ int ParentWork( int epoll_fd )
   return 0;
 }
 
-void Pdump( PPair *ppfds, size_t len )
+void Pdump( PPair *ppfds )
 {
   printf("///////////////////////////////////////////////\n");
-  for (int i = 0; i < len; ++i)
+  for (int i = 0; i < forks_num; ++i)
   {
     printf("#%d Parent's READ pipe:\n", i);
     printf("%d == [0], %d == [1]\n", ppfds[i].to_read[0], ppfds[i].to_read[1]);
@@ -254,7 +266,7 @@ int main( int argc, char *argv[] )
     }
   }
 
-  Pdump(pipe_fds, forks_num);
+  Pdump(pipe_fds);
 
   // initializing the child processes
   for (int i = 0; i < forks_num; ++i)
@@ -288,6 +300,8 @@ int main( int argc, char *argv[] )
   // Here the parent work
   ParentWork(epoll_fd);
   
+  CloseAll(pipe_fds);
+
   ///// NEAR THE END ///////////////////////////////////
   for (int i = 0; i < forks_num; ++i)
     // waiting for child process
