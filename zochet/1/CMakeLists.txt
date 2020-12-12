@@ -9,3 +9,4 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 add_executable(1.o 1.c)
+add_executable(t.o tst.c)
