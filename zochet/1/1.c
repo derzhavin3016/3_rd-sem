@@ -177,11 +177,8 @@ int main( int argc, char *argv[] )
 
   printf("STDOUT bytes: %zd\n", wc[0].bytes);
   printf("STDERR bytes: %zd\n", wc[1].bytes);
-  printf("I am waiting \n");
 
   CHECK_DF(wait(NULL), "Error waiting for process");
-
-  printf("I am no wating \n");
 
   return 0;
 }
