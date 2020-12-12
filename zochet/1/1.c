@@ -150,8 +150,8 @@ int main( int argc, char *argv[] )
 
   CHECK_DF(wait(NULL), "Error waiting for process");
 
-  printf("STDOUT: %d %d %d\n", w_out.strings, w_out.words, w_out.bytes);
-  printf("STDERR: %d %d %d\n", w_err.strings, w_err.words, w_err.bytes);
+  printf("STDOUT bytes: %d\n", w_out.bytes);
+  printf("STDERR bytes: %d\n", w_err.bytes);
 
   return 0;
 }
