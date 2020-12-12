@@ -104,7 +104,7 @@ int WordCount( int fd_in, WC *w_cnt )
 
 int main( int argc, char *argv[] )
 {
-  if (argc != 2)
+  if (argc < 2)
   {
     printf("2. Напишите программу, считающую число байт в потоках stdout и stderr дочернего процесса,\n"
            "заданной ей аргументами командной строки.\n");
