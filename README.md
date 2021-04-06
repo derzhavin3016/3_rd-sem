@@ -1,4 +1,8 @@
 # 3_rd-sem
+![GitHub repo size](https://img.shields.io/github/repo-size/derzhavin3016/3_rd-sem?style=for-the-badge)
+![GitHub last commit](https://img.shields.io/github/last-commit/derzhavin3016/3_rd-sem?color=red&style=for-the-badge)
+![GitHub lines](https://img.shields.io/tokei/lines/github/derzhavin3016/3_rd-sem?style=for-the-badge)
+
 My homework from 3-rd semester in MIPT.
 
 ## lsn1
